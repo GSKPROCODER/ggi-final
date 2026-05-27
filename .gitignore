@@ -9,3 +9,8 @@ coverage/
 .next/
 nexus-uploads/
 nexus-runner/target/
+
+.vercel
+
+# clerk configuration (can include secrets)
+/.clerk/

@@ -5,6 +5,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://nexus_user:nexus_password@localhost:5432/nexus_ai',
+    url: process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? 'postgresql://nexus_user:nexus_password@localhost:5432/nexus_ai',
   },
 });
