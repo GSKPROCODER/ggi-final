@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { del } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { authenticateRequest } from '@/lib/api/jwt';
@@ -77,13 +76,12 @@ export async function DELETE(
     // Clear dataset meta
     await db.delete(datasets).where(eq(datasets.id, datasetId));
 
-    // Delete local upload file if exists
+    // Delete file from Vercel Blob (filename stores the blob URL)
     try {
-      const filepath = path.join(process.cwd(), 'nexus-uploads', d.filename);
-      if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
+      if (d.filename?.startsWith('http')) {
+        await del(d.filename);
       }
-    } catch { /* file already cleared or skipped */ }
+    } catch { /* blob already deleted or not found */ }
 
     return new Response(null, { status: 204 });
   } catch (err: any) {

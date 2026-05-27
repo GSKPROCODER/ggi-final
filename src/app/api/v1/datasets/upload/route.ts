@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
 import { authenticateRequest } from '@/lib/api/jwt';
@@ -13,7 +12,7 @@ function parseCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"' || char === "'") {
@@ -39,13 +38,11 @@ async function parseFileContent(
   const filename = file.name.toLowerCase();
 
   if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
-    // Excel binary parsing via SheetJS
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
-    // Convert to array of arrays (first row = headers)
     const aoa: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
     if (aoa.length === 0) {
       throw new Error('Uploaded Excel file is empty.');
@@ -55,7 +52,6 @@ async function parseFileContent(
     const dataRows = aoa.slice(1).filter((row) => row.some((cell) => String(cell).trim() !== ''));
     const rowCount = dataRows.length;
 
-    // Build sample rows (first 10)
     const sampleRows: Record<string, string>[] = [];
     for (let i = 0; i < Math.min(10, dataRows.length); i++) {
       const rowObj: Record<string, string> = {};
@@ -65,12 +61,9 @@ async function parseFileContent(
       sampleRows.push(rowObj);
     }
 
-    // Convert entire sheet to CSV text for downstream storage/processing
     const rawCsvText = XLSX.utils.sheet_to_csv(sheet);
-
     return { headers, rowCount, sampleRows, rawCsvText };
   } else {
-    // CSV text parsing
     const content = await file.text();
     const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0);
     if (lines.length === 0) {
@@ -96,6 +89,7 @@ async function parseFileContent(
 
 /**
  * Handles POST requests to upload and structurally analyze a CSV or Excel dataset.
+ * Files are stored in Vercel Blob for persistence across serverless invocations.
  */
 export async function POST(req: Request) {
   try {
@@ -111,14 +105,15 @@ export async function POST(req: Request) {
     const { headers, rowCount, sampleRows, rawCsvText } = await parseFileContent(file);
 
     const datasetId = crypto.randomUUID();
-    // Always store as .csv internally for consistent downstream processing
-    const serverFilename = `${datasetId}_${originalFilename.replace(/\.xlsx?$/i, '.csv')}`;
+    const serverFilename = `datasets/${datasetId}_${originalFilename.replace(/\.xlsx?$/i, '.csv')}`;
 
-    // Insert metadata to PostgreSQL
+    // Store CSV in Vercel Blob — URL persists across serverless invocations
+    const blob = await put(serverFilename, rawCsvText, { access: 'public' });
+
     await db.insert(datasets).values({
       id: datasetId,
       userId,
-      filename: serverFilename,
+      filename: blob.url,
       originalFilename,
       rowCount,
       columnsJson: JSON.stringify(headers),
@@ -126,16 +121,9 @@ export async function POST(req: Request) {
       status: 'pending',
     });
 
-    // Store the normalized CSV content locally for batch processing
-    const uploadDir = path.join(process.cwd(), 'nexus-uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
-    fs.writeFileSync(path.join(uploadDir, serverFilename), rawCsvText, 'utf8');
-
     return NextResponse.json({
       id: datasetId,
-      filename: serverFilename,
+      filename: blob.url,
       original_filename: originalFilename,
       columns: headers,
       row_count: rowCount,
@@ -147,4 +135,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
   }
 }
-

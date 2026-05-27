@@ -1,18 +1,15 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { NextResponse, after } from 'next/server';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
 import { authenticateRequest } from '@/lib/api/jwt';
 import { eq, and } from 'drizzle-orm';
 
-// Helper to parse CSV line respecting quotes
 function parseCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"' || char === "'") {
@@ -29,8 +26,8 @@ function parseCsvLine(line: string): string[] {
 }
 
 /**
- * Handles POST requests to kick off non-blocking, async Gemini processing
- * for all records inside the uploaded CSV dataset.
+ * Handles POST requests to kick off non-blocking Gemini batch processing.
+ * Uses after() to keep the Vercel function alive after the HTTP response is sent.
  */
 export async function POST(
   req: Request,
@@ -57,30 +54,22 @@ export async function POST(
       return NextResponse.json({ detail: 'Dataset not found.' }, { status: 404 });
     }
 
-    // Set text column and mark status as processing
     await db.update(datasets)
-      .set({
-        status: 'processing',
-        textColumn: text_column,
-        processedCount: 0,
-      })
+      .set({ status: 'processing', textColumn: text_column, processedCount: 0 })
       .where(eq(datasets.id, datasetId));
 
-    // Async background promise - returns the HTTP response immediately
-    (async () => {
+    // after() keeps the Vercel function alive after the response is sent
+    after(async () => {
       try {
-        const filepath = path.join(process.cwd(), 'nexus-uploads', d.filename);
+        // Fetch CSV from Vercel Blob (d.filename stores the blob URL)
+        const fileRes = await fetch(d.filename);
+        if (!fileRes.ok) throw new Error('Could not retrieve uploaded file from storage.');
+        const content = await fileRes.text();
 
-        if (!fs.existsSync(filepath)) {
-          throw new Error('CSV upload file does not exist on disk.');
-        }
-
-        const content = fs.readFileSync(filepath, 'utf8');
         const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
-
         const headers = parseCsvLine(lines[0]);
 
-        // Support multi-column selection: text_column may be "col1, col2"
+        // Support multi-column: text_column may be "col1, col2"
         const columnNames = text_column.split(',').map((c: string) => c.trim()).filter(Boolean);
         const colIndices = columnNames.map((name: string) => headers.indexOf(name));
 
@@ -98,21 +87,15 @@ export async function POST(
             .map((i: number) => rowValues[i] || '')
             .filter(Boolean)
             .join(' | ');
-          if (rowText.trim().length > 0) {
-            texts.push(rowText);
-          }
+          if (rowText.trim().length > 0) texts.push(rowText);
         }
 
-        // Update rowCount to match processed rows in serverless context
         await db.update(datasets).set({ rowCount: texts.length }).where(eq(datasets.id, datasetId));
 
         let processed = 0;
-
-        // Process rows in sequence
         for (const text of texts) {
           try {
             const analysis = await analyzeText(text);
-
             await db.insert(records).values({
               id: crypto.randomUUID(),
               userId,
@@ -136,26 +119,18 @@ export async function POST(
             .where(eq(datasets.id, datasetId));
         }
 
-        // Generate final batch insights
         const insights = await generateBatchInsights(texts);
-
         await db.update(datasets)
-          .set({
-            status: 'completed',
-            insightsJson: JSON.stringify(insights),
-          })
+          .set({ status: 'completed', insightsJson: JSON.stringify(insights) })
           .where(eq(datasets.id, datasetId));
 
       } catch (err: any) {
         console.error('Background batch processing error:', err);
         await db.update(datasets)
-          .set({
-            status: 'failed',
-            errorMessage: err.message || 'Background process aborted.',
-          })
+          .set({ status: 'failed', errorMessage: err.message || 'Background process aborted.' })
           .where(eq(datasets.id, datasetId));
       }
-    })();
+    });
 
     return NextResponse.json({ message: 'Batch intelligence processing initialized.' });
   } catch (err: any) {
