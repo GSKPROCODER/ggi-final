@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { analyzeText } from '@/lib/services/gemini';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 
 /**
  * Handles POST requests to analyze an array of texts.
  */
 export async function POST(req: Request) {
   try {
-    authenticateRequest(req);
+    await requireAuth();
     const { texts } = await req.json();
 
     if (!texts || !Array.isArray(texts)) {

@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
 import { analyzeText } from '@/lib/services/gemini';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 
 /**
  * Handles POST requests to analyze a single text string using Gemini.
  */
 export async function POST(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { text, save_to_history = true } = await req.json();
 
     if (!text || typeof text !== 'string') {

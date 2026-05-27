@@ -150,67 +150,18 @@ export interface AgentChatResponse {
   thought_process: AgentLog[];
 }
 
-// ── Token Management ───────────────────────────────────────────────────────────
-
-const TOKEN_KEY = 'nexus_access_token';
-const REFRESH_KEY = 'nexus_refresh_token';
-
-export const tokenStorage = {
-  setTokens(access: string, refresh: string) {
-    localStorage.setItem(TOKEN_KEY, access);
-    localStorage.setItem(REFRESH_KEY, refresh);
-  },
-  getAccessToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
-  },
-  getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_KEY);
-  },
-  clearTokens() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  },
-};
-
 // ── Fetch Wrapper ──────────────────────────────────────────────────────────────
 
 const BASE_URL = '/api/v1';
-let isRefreshing = false;
-
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = tokenStorage.getRefreshToken();
-  if (!refreshToken) return null;
-
-  try {
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!res.ok) {
-      tokenStorage.clearTokens();
-      return null;
-    }
-    const data: TokenResponse = await res.json();
-    tokenStorage.setTokens(data.access_token, data.refresh_token);
-    return data.access_token;
-  } catch {
-    tokenStorage.clearTokens();
-    return null;
-  }
-}
 
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
-  isRetry = false,
 ): Promise<T> {
-  const token = tokenStorage.getAccessToken();
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) headers['Authorization'] = `Bearer ${token}`;
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
@@ -221,20 +172,10 @@ async function request<T>(
     headers,
   });
 
-  // Handle token refresh on 401
-  if (response.status === 401 && !isRetry && !isRefreshing) {
-    isRefreshing = true;
-    const newToken = await refreshAccessToken();
-    isRefreshing = false;
-
-    if (newToken) {
-      // Retry the original request with the new token
-      return request<T>(endpoint, options, true);
-    } else {
-      // Refresh failed — redirect to auth
-      window.location.href = '/auth';
-      throw new Error('Session expired. Please log in again.');
-    }
+  // Clerk handles session via cookie — on 401 redirect to sign-in
+  if (response.status === 401) {
+    window.location.href = '/sign-in';
+    throw new Error('Session expired. Please log in again.');
   }
 
   if (!response.ok) {

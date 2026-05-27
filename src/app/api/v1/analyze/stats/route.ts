@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, and, sql } from 'drizzle-orm';
 
 /**
@@ -9,7 +9,7 @@ import { eq, and, sql } from 'drizzle-orm';
  */
 export async function GET(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
 
     const allRecords = await db.query.records.findMany({
       where: eq(records.userId, userId),

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { alerts } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, and, desc } from 'drizzle-orm';
 
 /**
@@ -9,7 +9,7 @@ import { eq, and, desc } from 'drizzle-orm';
  */
 export async function GET(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { searchParams } = new URL(req.url);
     const severity = searchParams.get('severity');
     const unreadOnly = searchParams.get('unread_only') === 'true';
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
 
     await db.delete(alerts).where(eq(alerts.userId, userId));
 

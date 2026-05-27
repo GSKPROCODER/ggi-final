@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, and, ilike, desc } from 'drizzle-orm';
 
 /**
@@ -9,7 +9,7 @@ import { eq, and, ilike, desc } from 'drizzle-orm';
  */
 export async function GET(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const sentiment = searchParams.get('sentiment');

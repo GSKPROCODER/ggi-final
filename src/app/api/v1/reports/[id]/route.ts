@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { reports } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
 /**
@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const resolvedParams = await params;
     const reportId = resolvedParams.id;
 
@@ -52,7 +52,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const resolvedParams = await params;
     const reportId = resolvedParams.id;
 

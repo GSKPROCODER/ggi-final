@@ -2,7 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
 function parseCsvLine(line: string): string[] {
@@ -34,7 +34,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const resolvedParams = await params;
     const datasetId = resolvedParams.id;
     const { text_column } = await req.json();

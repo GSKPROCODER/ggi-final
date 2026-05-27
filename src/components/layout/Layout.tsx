@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   BarChart3,
@@ -20,8 +20,8 @@ import {
   PieChart,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
-import { useStore } from '@/store/useStore';
 import Logo from '@/components/Logo';
 
 const navItems = [
@@ -45,8 +45,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const currentPath = pathname || '';
-  const router = useRouter();
-  const { user, logout } = useStore();
+  const { signOut } = useClerk();
+  const { user } = useUser();
 
   useEffect(() => {
     const handleResize = () => {
@@ -67,10 +67,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     item.exact ? currentPath === item.path : currentPath.startsWith(item.path)
   )?.name || 'Overview';
 
-  const handleLogout = () => {
-    logout();
-    router.push('/auth');
-  };
+  const handleLogout = () => signOut({ redirectUrl: '/sign-in' });
+  const displayName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.emailAddresses[0]?.emailAddress : 'User';
+  const displayEmail = user?.emailAddresses[0]?.emailAddress ?? '';
 
   const SIDEBAR_W = 220;
   const COLLAPSED_W = 68;
@@ -189,7 +188,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="shrink-0 p-2 border-t border-border/30">
           <div className={cn('flex items-center gap-2.5 px-2 py-2 rounded-xl', isSidebarOpen && 'hover:bg-secondary/60 transition-colors')}>
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-[11px] font-bold text-white shrink-0 uppercase">
-              {user?.full_name?.charAt(0) || 'U'}
+              {displayName?.charAt(0) || 'U'}
             </div>
             <AnimatePresence mode="wait">
               {isSidebarOpen && (
@@ -200,8 +199,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   transition={{ duration: 0.1 }}
                   className="flex-1 min-w-0"
                 >
-                  <p className="text-[13px] font-medium truncate leading-tight">{user?.full_name || 'User'}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+                  <p className="text-[13px] font-medium truncate leading-tight">{displayName}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{displayEmail}</p>
                 </motion.div>
               )}
             </AnimatePresence>

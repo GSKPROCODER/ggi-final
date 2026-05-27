@@ -1,3 +1,4 @@
+import {ClerkProvider} from "@clerk/nextjs";
 import '@/index.css';
 import { Metadata } from 'next';
 import { Toaster } from 'sonner';
@@ -23,8 +24,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-        <Toaster theme="dark" position="bottom-right" richColors />
+        <ClerkProvider>
+          {children}
+          <Toaster theme="dark" position="bottom-right" richColors />
+        </ClerkProvider>
       </body>
     </html>
   );

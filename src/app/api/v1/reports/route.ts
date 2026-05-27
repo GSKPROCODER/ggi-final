@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { reports, records } from '@/lib/db/schema';
 import { generateReport } from '@/lib/services/gemini';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { eq, desc } from 'drizzle-orm';
 
 /**
@@ -10,7 +10,7 @@ import { eq, desc } from 'drizzle-orm';
  */
 export async function GET(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
 
     const list = await db.query.reports.findMany({
       where: eq(reports.userId, userId),
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
  */
 export async function POST(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { title } = await req.json();
 
     if (!title || typeof title !== 'string') {

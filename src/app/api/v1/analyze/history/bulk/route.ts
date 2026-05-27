@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import { and, eq, inArray } from 'drizzle-orm';
 
 /**
@@ -9,7 +9,7 @@ import { and, eq, inArray } from 'drizzle-orm';
  */
 export async function DELETE(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { record_ids } = await req.json();
 
     if (!record_ids || !Array.isArray(record_ids) || record_ids.length === 0) {

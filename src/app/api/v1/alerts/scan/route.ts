@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { alerts, records } from '@/lib/db/schema';
 import { scanForAnomalies } from '@/lib/services/gemini';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 
 /**
  * Handles POST requests to scan user records history for structural risk patterns
@@ -11,7 +11,7 @@ import { authenticateRequest } from '@/lib/api/jwt';
  */
 export async function POST(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
 
     // Fetch user's recent records to construct context
     const userRecords = await db.query.records.findMany({

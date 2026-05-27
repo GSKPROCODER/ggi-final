@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 import * as XLSX from 'xlsx';
 
 /**
@@ -93,7 +93,7 @@ async function parseFileContent(
  */
 export async function POST(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 

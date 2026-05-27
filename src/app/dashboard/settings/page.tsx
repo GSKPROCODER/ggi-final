@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Save, User, Bell, Shield, Database, Moon, Sun, Monitor, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useStore } from '@/store/useStore';
-import { authApi } from '@/lib/api';
+import { useClerk, useUser } from '@clerk/nextjs';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const { user, logout, setUser } = useStore();
-  const [fullName, setFullName] = useState(user?.full_name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const { signOut } = useClerk();
+  const { user } = useUser();
+
+  const [fullName, setFullName] = useState(
+    user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '',
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const tabs = [
@@ -27,20 +29,17 @@ export default function Settings() {
     if (activeTab !== 'profile') { toast.success('Settings saved'); return; }
     setIsSaving(true);
     try {
-      const updated = await authApi.updateProfile({ full_name: fullName, email });
-      setUser(updated);
+      const [first, ...rest] = fullName.trim().split(' ');
+      await user?.update({ firstName: first, lastName: rest.join(' ') || undefined });
       toast.success('Profile updated successfully');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save profile');
+    } catch {
+      toast.error('Failed to save profile');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/auth';
-  };
+  const handleLogout = () => signOut({ redirectUrl: '/sign-in' });
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8 pb-20">
@@ -93,8 +92,9 @@ export default function Settings() {
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium text-muted-foreground">Email Address</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                    <input type="email" value={user?.emailAddresses[0]?.emailAddress ?? ''} disabled
+                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm opacity-60 cursor-not-allowed" />
+                    <p className="text-xs text-muted-foreground">Email is managed by Clerk.</p>
                   </div>
                 </div>
 
@@ -119,12 +119,11 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground mt-3 italic">Nexus AI is currently optimized for Dark Mode only.</p>
                 </div>
 
-                {/* AI Security notice */}
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3">
                   <Info size={16} className="text-primary mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
                     <p className="font-medium text-primary mb-1">AI Processing is Secure</p>
-                    <p className="text-foreground/70 text-xs">Your Gemini API key is stored securely on the server and is never exposed to the browser. All AI analysis happens server-side.</p>
+                    <p className="text-foreground/70 text-xs">Your Gemini API key is stored securely on the server and is never exposed to the browser.</p>
                   </div>
                 </div>
               </div>
@@ -156,21 +155,9 @@ export default function Settings() {
             {activeTab === 'security' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold">Security Settings</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Current Password</label>
-                    <input type="password" placeholder="••••••••"
-                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">New Password</label>
-                    <input type="password" placeholder="••••••••"
-                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  </div>
-                  <button className="px-4 py-2 rounded-lg bg-secondary text-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
-                    Update Password
-                  </button>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Password and two-factor authentication are managed through your Clerk account.
+                </p>
               </div>
             )}
 
@@ -179,14 +166,14 @@ export default function Settings() {
                 <h3 className="text-lg font-semibold">Data Management</h3>
                 <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/5 space-y-4">
                   <div>
-                    <h4 className="font-medium text-sm text-destructive">Delete Account Data</h4>
+                    <h4 className="font-medium text-sm text-destructive">Sign Out</h4>
                     <p className="text-xs text-muted-foreground mt-1">
-                      This will log you out. Contact support to permanently delete your account and all associated data.
+                      Your data remains securely stored on the server.
                     </p>
                   </div>
                   <button onClick={() => setShowConfirmModal(true)}
                     className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors">
-                    Sign Out & Clear Session
+                    Sign Out
                   </button>
                 </div>
               </div>
@@ -203,7 +190,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
@@ -216,7 +202,7 @@ export default function Settings() {
                 <div>
                   <h2 className="text-xl font-semibold mb-2">Sign Out?</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    You will be logged out and your session data will be cleared. Your data remains securely stored on the server.
+                    You will be logged out. Your data remains securely stored on the server.
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { runChat } from '@/lib/services/agent';
-import { authenticateRequest } from '@/lib/api/jwt';
+import { requireAuth } from '@/lib/api/auth';
 
 /**
  * Handles POST requests to run conversational database analytics.
@@ -8,7 +8,7 @@ import { authenticateRequest } from '@/lib/api/jwt';
  */
 export async function POST(req: Request) {
   try {
-    const userId = authenticateRequest(req);
+    const userId = await requireAuth();
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {

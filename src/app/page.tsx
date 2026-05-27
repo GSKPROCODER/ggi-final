@@ -1,15 +1,20 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { ArrowRight, BarChart3, ShieldAlert, Zap, Database } from 'lucide-react';
 import Logo from '@/components/Logo';
 
-/**
- * Root marketing landing page. Sleek gradients, framer motion micro-interactions,
- * and high-fidelity simulated dashboard mockup.
- */
 export default function Page() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) router.replace('/dashboard');
+  }, [isLoaded, isSignedIn, router]);
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 dark overflow-x-hidden">
       {/* Navbar */}
@@ -22,10 +27,10 @@ export default function Page() {
             Nexus AI
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/auth" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/sign-in" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Sign In
             </Link>
-            <Link href="/auth" className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)]">
+            <Link href="/sign-in" className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)]">
               Get Started
             </Link>
           </div>
@@ -76,7 +81,7 @@ export default function Page() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/auth" className="w-full sm:w-auto px-8 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] flex items-center justify-center gap-2 group">
+            <Link href="/sign-in" className="w-full sm:w-auto px-8 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] flex items-center justify-center gap-2 group">
               Start Free Trial
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
