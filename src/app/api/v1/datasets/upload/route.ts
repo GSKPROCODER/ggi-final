@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
 import { authenticateRequest } from '@/lib/api/jwt';
@@ -125,8 +127,6 @@ export async function POST(req: Request) {
     });
 
     // Store the normalized CSV content locally for batch processing
-    const fs = require('fs');
-    const path = require('path');
     const uploadDir = path.join(process.cwd(), 'nexus-uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);

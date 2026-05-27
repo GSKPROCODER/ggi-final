@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { authenticateRequest } from '@/lib/api/jwt';
@@ -77,8 +79,6 @@ export async function DELETE(
 
     // Delete local upload file if exists
     try {
-      const fs = require('fs');
-      const path = require('path');
       const filepath = path.join(process.cwd(), 'nexus-uploads', d.filename);
       if (fs.existsSync(filepath)) {
         fs.unlinkSync(filepath);

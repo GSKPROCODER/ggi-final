@@ -9,7 +9,7 @@ const getGenAIClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-const NEXUS_MODEL = 'gemini-2.5-flash';
+const NEXUS_MODEL = 'gemini-3.1-flash-lite';
 
 /**
  * Strips markdown code blocks (e.g. ```json ... ```) from a text response
@@ -19,7 +19,11 @@ function parseJsonResponse<T>(text: string): T {
   const cleanText = text.trim();
   const jsonMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   const jsonString = jsonMatch ? jsonMatch[1].trim() : cleanText;
-  return JSON.parse(jsonString) as T;
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch {
+    throw new Error(`Gemini returned invalid JSON. Raw: ${jsonString.slice(0, 200)}`);
+  }
 }
 
 /**

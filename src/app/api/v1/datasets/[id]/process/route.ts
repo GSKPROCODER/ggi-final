@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
@@ -67,8 +69,6 @@ export async function POST(
     // Async background promise - returns the HTTP response immediately
     (async () => {
       try {
-        const fs = require('fs');
-        const path = require('path');
         const filepath = path.join(process.cwd(), 'nexus-uploads', d.filename);
 
         if (!fs.existsSync(filepath)) {
@@ -77,21 +77,28 @@ export async function POST(
 
         const content = fs.readFileSync(filepath, 'utf8');
         const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
-        
+
         const headers = parseCsvLine(lines[0]);
-        const colIdx = headers.indexOf(text_column);
-        if (colIdx === -1) {
-          throw new Error(`Mapped column "${text_column}" not found in CSV headers.`);
+
+        // Support multi-column selection: text_column may be "col1, col2"
+        const columnNames = text_column.split(',').map((c: string) => c.trim()).filter(Boolean);
+        const colIndices = columnNames.map((name: string) => headers.indexOf(name));
+
+        if (colIndices.every((i: number) => i === -1)) {
+          throw new Error(`None of the mapped columns were found in CSV headers: ${columnNames.join(', ')}`);
         }
 
-        // Limit the active processing batch to 15 rows in serverless environments to fit timeouts 
-        const maxRows = Math.min(lines.length - 1, 15);
+        const maxRows = Math.min(lines.length - 1, 500);
         const texts: string[] = [];
 
         for (let i = 1; i <= maxRows; i++) {
           const rowValues = parseCsvLine(lines[i]);
-          const rowText = rowValues[colIdx];
-          if (rowText && rowText.trim().length > 0) {
+          const rowText = colIndices
+            .filter((i: number) => i !== -1)
+            .map((i: number) => rowValues[i] || '')
+            .filter(Boolean)
+            .join(' | ');
+          if (rowText.trim().length > 0) {
             texts.push(rowText);
           }
         }

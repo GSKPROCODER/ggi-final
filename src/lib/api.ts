@@ -341,7 +341,7 @@ export const analyzeApi = {
 export const reportsApi = {
   list: () => request<ReportListItem[]>('/reports/'),
   generate: (title: string) =>
-    request<ReportResponse>('/reports/generate', {
+    request<ReportResponse>('/reports/', {
       method: 'POST',
       body: JSON.stringify({ title }),
     }),

@@ -78,8 +78,9 @@ export default function UploadData() {
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setProcessingTime(elapsed);
         setProgress(status.percent);
-        setProcessingStatus(`Analyzed ${status.processed_count} of ${status.row_count} records`);
-        setBatchProcessing(true, status.percent, processingStatus, dsId);
+        const statusMsg = `Analyzed ${status.processed_count} of ${status.row_count} records`;
+        setProcessingStatus(statusMsg);
+        setBatchProcessing(true, status.percent, statusMsg, dsId);
 
         if (status.status === 'completed' || status.status === 'failed') {
           clearInterval(pollRef.current!);
@@ -93,8 +94,11 @@ export default function UploadData() {
             setStep('columns');
           }
         }
-      } catch {
+      } catch (err) {
         clearInterval(pollRef.current!);
+        setBatchProcessing(false, 0, '');
+        setError(err instanceof Error ? err.message : 'Lost connection during processing.');
+        setStep('columns');
       }
     }, 2000);
   };

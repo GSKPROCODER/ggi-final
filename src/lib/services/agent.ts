@@ -75,13 +75,13 @@ function createAgentGraph(userId: string) {
 
   // Model setup
   const model = new ChatGoogleGenerativeAI({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.1-flash-lite',
     apiKey,
     temperature: 0.1,
   });
 
   const evaluatorModel = new ChatGoogleGenerativeAI({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.1-flash-lite',
     apiKey,
     temperature: 0.0,
   });

@@ -41,8 +41,8 @@ export async function GET(req: Request) {
         emotion: r.emotion,
         risk_level: r.riskLevel,
         confidence_score: r.confidenceScore ? r.confidenceScore * 100 : 75,
-        key_issues_json: r.keyIssuesJson,
-        recommendations_json: r.recommendationsJson,
+        key_issues: JSON.parse(r.keyIssuesJson || '[]'),
+        recommendations: JSON.parse(r.recommendationsJson || '[]'),
         created_at: r.createdAt.toISOString(),
       }))
     );

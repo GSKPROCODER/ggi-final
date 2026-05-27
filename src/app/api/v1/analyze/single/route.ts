@@ -44,8 +44,8 @@ export async function POST(req: Request) {
       emotion: analysis.emotion,
       risk_level: analysis.risk_level,
       confidence_score: analysis.confidence_score,
-      key_issues_json: JSON.stringify(analysis.key_issues),
-      recommendations_json: JSON.stringify(analysis.recommendations),
+      key_issues: analysis.key_issues,
+      recommendations: analysis.recommendations,
       created_at: new Date().toISOString(),
     });
   } catch (err: any) {
