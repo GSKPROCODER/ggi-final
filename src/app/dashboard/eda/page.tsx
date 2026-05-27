@@ -18,7 +18,7 @@ import {
   Download,
   Filter
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from 'motion/react';
 import { edaApi, datasetsApi } from "@/lib/api";
 import { toast } from "sonner";
 

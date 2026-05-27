@@ -1,5 +1,6 @@
 import '@/index.css';
 import { Metadata } from 'next';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Nexus AI — Executive Text Intelligence & Data Analytics',
@@ -16,13 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark h-full w-full overflow-hidden">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="h-full w-full bg-background text-foreground antialiased overflow-hidden">
+      <body className="min-h-screen bg-background text-foreground antialiased">
         {children}
+        <Toaster theme="dark" position="bottom-right" richColors />
       </body>
     </html>
   );

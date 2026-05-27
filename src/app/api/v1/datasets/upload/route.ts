@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
 import { authenticateRequest } from '@/lib/api/jwt';
+import * as XLSX from 'xlsx';
 
-// Helper to parse a CSV line respecting quotes containing commas
+/**
+ * Parse a CSV line respecting quotes containing commas.
+ */
 function parseCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
@@ -25,7 +28,72 @@ function parseCsvLine(line: string): string[] {
 }
 
 /**
- * Handles POST requests to upload and structurally analyze a CSV dataset.
+ * Parse uploaded file content into headers and row objects.
+ * Supports both CSV (text) and Excel (.xlsx) binary formats.
+ */
+async function parseFileContent(
+  file: File
+): Promise<{ headers: string[]; rowCount: number; sampleRows: Record<string, string>[]; rawCsvText: string }> {
+  const filename = file.name.toLowerCase();
+
+  if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+    // Excel binary parsing via SheetJS
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    // Convert to array of arrays (first row = headers)
+    const aoa: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    if (aoa.length === 0) {
+      throw new Error('Uploaded Excel file is empty.');
+    }
+
+    const headers = aoa[0].map((h) => String(h).trim());
+    const dataRows = aoa.slice(1).filter((row) => row.some((cell) => String(cell).trim() !== ''));
+    const rowCount = dataRows.length;
+
+    // Build sample rows (first 10)
+    const sampleRows: Record<string, string>[] = [];
+    for (let i = 0; i < Math.min(10, dataRows.length); i++) {
+      const rowObj: Record<string, string> = {};
+      headers.forEach((h, idx) => {
+        rowObj[h] = String(dataRows[i][idx] ?? '');
+      });
+      sampleRows.push(rowObj);
+    }
+
+    // Convert entire sheet to CSV text for downstream storage/processing
+    const rawCsvText = XLSX.utils.sheet_to_csv(sheet);
+
+    return { headers, rowCount, sampleRows, rawCsvText };
+  } else {
+    // CSV text parsing
+    const content = await file.text();
+    const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    if (lines.length === 0) {
+      throw new Error('Uploaded CSV file is empty.');
+    }
+
+    const headers = parseCsvLine(lines[0]);
+    const rowCount = lines.length - 1;
+
+    const sampleRows: Record<string, string>[] = [];
+    for (let i = 1; i <= Math.min(10, rowCount); i++) {
+      const values = parseCsvLine(lines[i]);
+      const rowObj: Record<string, string> = {};
+      headers.forEach((h, idx) => {
+        rowObj[h] = values[idx] || '';
+      });
+      sampleRows.push(rowObj);
+    }
+
+    return { headers, rowCount, sampleRows, rawCsvText: content };
+  }
+}
+
+/**
+ * Handles POST requests to upload and structurally analyze a CSV or Excel dataset.
  */
 export async function POST(req: Request) {
   try {
@@ -38,31 +106,11 @@ export async function POST(req: Request) {
     }
 
     const originalFilename = file.name;
-    const content = await file.text();
-
-    // Parse CSV rows structurally
-    const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0);
-    if (lines.length === 0) {
-      return NextResponse.json({ detail: 'Uploaded file is empty.' }, { status: 400 });
-    }
-
-    // Headers extraction
-    const headers = parseCsvLine(lines[0]);
-    const rowCount = lines.length - 1;
-
-    // Generate first 10 sample rows
-    const sampleRows: Array<Record<string, string>> = [];
-    for (let i = 1; i <= Math.min(10, rowCount); i++) {
-      const values = parseCsvLine(lines[i]);
-      const rowObj: Record<string, string> = {};
-      headers.forEach((h, idx) => {
-        rowObj[h] = values[idx] || '';
-      });
-      sampleRows.push(rowObj);
-    }
+    const { headers, rowCount, sampleRows, rawCsvText } = await parseFileContent(file);
 
     const datasetId = crypto.randomUUID();
-    const serverFilename = `${datasetId}_${originalFilename}`;
+    // Always store as .csv internally for consistent downstream processing
+    const serverFilename = `${datasetId}_${originalFilename.replace(/\.xlsx?$/i, '.csv')}`;
 
     // Insert metadata to PostgreSQL
     await db.insert(datasets).values({
@@ -76,17 +124,14 @@ export async function POST(req: Request) {
       status: 'pending',
     });
 
-    // Write file context into temporary directory or keep in db schema. 
-    // In Vercel serverless, we can store CSV row contents directly inside the memory store or
-    // write to Vercel Blob. For local/development, we'll write the raw CSV text locally in a folder inside the workspace
-    // as well as allow in-memory process triggers.
+    // Store the normalized CSV content locally for batch processing
     const fs = require('fs');
     const path = require('path');
     const uploadDir = path.join(process.cwd(), 'nexus-uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
-    fs.writeFileSync(path.join(uploadDir, serverFilename), content, 'utf8');
+    fs.writeFileSync(path.join(uploadDir, serverFilename), rawCsvText, 'utf8');
 
     return NextResponse.json({
       id: datasetId,
@@ -102,3 +147,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
   }
 }
+
