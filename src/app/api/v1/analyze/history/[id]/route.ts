@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { records } from '@/lib/db/schema';
+import { authenticateRequest } from '@/lib/api/jwt';
+import { eq, and } from 'drizzle-orm';
+
+/**
+ * Handles DELETE requests to clear an individual record from the history catalog.
+ */
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = authenticateRequest(req);
+    const resolvedParams = await params;
+    const recordId = resolvedParams.id;
+
+    await db.delete(records).where(
+      and(
+        eq(records.id, recordId),
+        eq(records.userId, userId)
+      )
+    );
+
+    return new Response(null, { status: 204 });
+  } catch (err: any) {
+    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
+    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  }
+}
