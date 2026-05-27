@@ -44,6 +44,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
+  const currentPath = pathname || '';
   const router = useRouter();
   const { user, logout } = useStore();
 
@@ -63,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [pathname, isMobile]);
 
   const currentPageName = navItems.find(item =>
-    item.exact ? pathname === item.path : pathname.startsWith(item.path)
+    item.exact ? currentPath === item.path : currentPath.startsWith(item.path)
   )?.name || 'Overview';
 
   const handleLogout = () => {
@@ -143,7 +144,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
           {navItems.map(item => {
-            const isActive = item.exact ? pathname === item.path : pathname.startsWith(item.path);
+            const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
             return (
               <Link
                 key={item.path}
@@ -237,7 +238,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             href="/dashboard/agent"
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all',
-              pathname === '/dashboard/agent'
+              currentPath === '/dashboard/agent'
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                 : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
             )}

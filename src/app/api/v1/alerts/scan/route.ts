@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     // Run anomaly scan via Gemini
     const scannedAlerts = await scanForAnomalies(contextData);
 
-    const insertedAlerts = [];
+    const insertedAlerts: any[] = [];
 
     // Save found alerts
     for (const a of scannedAlerts) {
