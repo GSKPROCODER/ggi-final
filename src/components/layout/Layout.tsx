@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Command,
+  PanelLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useClerk, useUser } from '@clerk/nextjs';
@@ -31,17 +32,17 @@ import { datasetsApi } from '@/lib/api';
 
 const mainNav = [
   { name: 'Dashboard',   path: '/dashboard',           icon: LayoutDashboard, exact: true },
-  { name: 'Analyze',     path: '/dashboard/analyze',   icon: BarChart3 },
-  { name: 'EDA & Insights', path: '/dashboard/eda',    icon: PieChart },
-  { name: 'Nexus Agent', path: '/dashboard/agent',     icon: Bot },
+  { name: 'Analyze',     path: '/dashboard/analyze',   icon: BarChart3, exact: false },
+  { name: 'EDA & Insights', path: '/dashboard/eda',    icon: PieChart, exact: false },
+  { name: 'Nexus Agent', path: '/dashboard/agent',     icon: Bot, exact: false },
 ];
 
 const workspaceNav = [
-  { name: 'Upload Data', path: '/dashboard/upload',    icon: UploadCloud },
-  { name: 'History',     path: '/dashboard/history',   icon: Database },
-  { name: 'Reports',     path: '/dashboard/reports',   icon: FileText },
-  { name: 'Alerts',      path: '/dashboard/alerts',    icon: Bell },
-  { name: 'Settings',    path: '/dashboard/settings',  icon: Settings },
+  { name: 'Upload Data', path: '/dashboard/upload',    icon: UploadCloud, exact: false },
+  { name: 'History',     path: '/dashboard/history',   icon: Database, exact: false },
+  { name: 'Reports',     path: '/dashboard/reports',   icon: FileText, exact: false },
+  { name: 'Alerts',      path: '/dashboard/alerts',    icon: Bell, exact: false },
+  { name: 'Settings',    path: '/dashboard/settings',  icon: Settings, exact: false },
 ];
 
 const contactNav = [
@@ -174,7 +175,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar Capsule */}
       <motion.aside
         initial={false}
         animate={{
@@ -183,125 +184,168 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className={cn(
-          'h-full flex flex-col shrink-0 z-30 overflow-hidden',
-          'border-r border-border/40 bg-card/60 backdrop-blur-2xl',
+          'h-[calc(100vh-2rem)] my-4 ml-4 flex flex-col shrink-0 z-30 overflow-visible relative',
+          'rounded-[32px] border border-glass-border bg-glass shadow-soft',
           isMobile ? 'fixed top-0 left-0' : 'relative'
         )}
         style={{ minWidth: isMobile ? SIDEBAR_W : (isSidebarOpen ? SIDEBAR_W : COLLAPSED_W) }}
       >
-        {/* Logo row */}
-        <div className="h-14 flex items-center justify-between px-3 border-b border-border/30 shrink-0">
+        {/* Logo row (No border bottom, bold text instead of logo icon) */}
+        <div className="pt-6 pb-4 px-6 flex items-center justify-between shrink-0">
           <AnimatePresence mode="wait">
-            {isSidebarOpen && (
+            {isSidebarOpen ? (
               <motion.div
                 key="logo"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-2.5 overflow-hidden"
+                className="flex items-center"
               >
-                <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">
-                  <Logo className="w-4 h-4" />
-                </div>
-                <span className="font-semibold text-sm tracking-tight whitespace-nowrap">Nexus AI</span>
+                <span className="font-bold text-[22px] tracking-tight">NEXUS AI</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="logo-collapsed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full flex justify-center"
+              >
+                <span className="font-bold text-lg">N</span>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {!isMobile && (
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-auto"
-            >
-              {isSidebarOpen ? <ChevronLeft size={16} /> : <Menu size={16} />}
-            </button>
-          )}
           {isMobile && isSidebarOpen && (
-            <button onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground shrink-0">
-              <X size={16} />
+            <button onClick={() => setIsSidebarOpen(false)} className="p-1 rounded-full bg-secondary/50 text-muted-foreground">
+              <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {navItems.map(item => {
-            const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={cn(
-                  'flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-all duration-150 group relative min-w-0',
-                  isActive
-                    ? 'bg-primary/12 text-primary font-medium'
-                    : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground'
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <item.icon
-                  size={18}
-                  className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}
-                />
-                <AnimatePresence mode="wait">
+        {/* Search Bar */}
+        <div className="px-4 pb-4 shrink-0">
+          <div className={cn("flex items-center gap-2 rounded-[14px] bg-secondary/50 border border-glass-border transition-all", isSidebarOpen ? "px-3 py-2" : "p-2 justify-center")}>
+            <Search size={16} className="text-muted-foreground shrink-0" />
+            <AnimatePresence mode="wait">
+              {isSidebarOpen && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex items-center justify-between min-w-0">
+                  <span className="text-sm text-muted-foreground font-medium">Search</span>
+                  <div className="flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/40 shadow-sm">
+                    <Command size={10} /> S
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Nav Sections */}
+        <div className="flex-1 overflow-y-auto px-3 space-y-6 scrollbar-hide pb-4">
+          
+          {/* MAIN SECTION */}
+          <div className="space-y-1">
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2">
+                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Main</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {mainNav.map(item => {
+              const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
+              return (
+                <Link key={item.path} href={item.path}
+                  className={cn('flex items-center gap-3 px-3 py-2.5 rounded-[14px] transition-all duration-200 group relative', isActive ? 'bg-secondary/80 border border-glass-border text-foreground font-medium shadow-sm' : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground border border-transparent')}
+                >
+                  <item.icon size={18} className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
+                  <AnimatePresence>
+                    {isSidebarOpen && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] whitespace-nowrap overflow-hidden">
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* WORKSPACE SECTION */}
+          <div className="space-y-1">
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2">
+                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Workspace</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {workspaceNav.map(item => {
+              const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
+              return (
+                <Link key={item.path} href={item.path}
+                  className={cn('flex items-center gap-3 px-3 py-2.5 rounded-[14px] transition-all duration-200 group relative', isActive ? 'bg-secondary/80 border border-glass-border text-foreground font-medium shadow-sm' : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground border border-transparent')}
+                >
+                  <item.icon size={18} className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
+                  <AnimatePresence>
+                    {isSidebarOpen && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] whitespace-nowrap overflow-hidden">
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* MESSAGES SECTION */}
+          <div className="space-y-1">
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2 flex items-center justify-between">
+                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Messages</p>
+                  <span className="text-muted-foreground/60 hover:text-foreground cursor-pointer">+</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {contactNav.map(contact => (
+              <div key={contact.name} className={cn('flex items-center gap-3 px-3 py-2 rounded-[14px] transition-all duration-200 cursor-pointer group hover:bg-secondary/40', !isSidebarOpen && 'justify-center')}>
+                <div className="relative shrink-0">
+                  <img src={contact.avatar} alt={contact.name} className="w-6 h-6 rounded-full border border-border/50" />
+                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card", contact.status === 'online' ? 'bg-emerald-500' : 'bg-muted-foreground')} />
+                </div>
+                <AnimatePresence>
                   {isSidebarOpen && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.1 }}
-                      className="text-sm whitespace-nowrap overflow-hidden"
-                    >
-                      {item.name}
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] text-muted-foreground group-hover:text-foreground whitespace-nowrap overflow-hidden">
+                      {contact.name}
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </Link>
-            );
-          })}
-        </nav>
+              </div>
+            ))}
+          </div>
 
-        {/* User footer */}
-        <div className="shrink-0 p-2 border-t border-border/30">
-          <div className={cn('flex items-center gap-2.5 px-2 py-2 rounded-xl', isSidebarOpen && 'hover:bg-secondary/60 transition-colors')}>
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-[11px] font-bold text-white shrink-0 uppercase">
+        </div>
+
+        {/* User footer Pill */}
+        <div className="shrink-0 p-4">
+          <div className={cn('flex items-center gap-3 p-2 rounded-[20px] border border-glass-border bg-background/50 shadow-sm transition-all', isSidebarOpen ? 'hover:bg-secondary/50 cursor-pointer' : 'justify-center')}>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-[12px] font-bold text-white shrink-0 uppercase shadow-inner">
               {displayName?.charAt(0) || 'U'}
             </div>
             <AnimatePresence mode="wait">
               {isSidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
-                  className="flex-1 min-w-0"
-                >
-                  <p className="text-[13px] font-semibold truncate leading-tight">{displayName}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{displayEmail}</p>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-w-0 flex items-center justify-between">
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <p className="text-[13px] font-semibold truncate leading-tight">{displayName}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5 truncate">Designer</p>
+                  </div>
+                  <ChevronLeft size={14} className="text-muted-foreground -rotate-90 shrink-0" />
                 </motion.div>
               )}
             </AnimatePresence>
-            {isSidebarOpen && (
-              <button onClick={handleLogout} title="Sign out"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0">
-                <LogOut size={16} />
-              </button>
-            )}
           </div>
-          {!isSidebarOpen && (
-            <button onClick={handleLogout} title="Sign out"
-              className="w-full flex justify-center p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors mt-1">
-              <LogOut size={16} />
-            </button>
-          )}
         </div>
       </motion.aside>
 
@@ -310,12 +354,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Topbar */}
         <header className="h-14 shrink-0 flex items-center justify-between px-4 md:px-5 border-b border-border/30 bg-background/80 backdrop-blur-xl z-10">
           <div className="flex items-center gap-3 min-w-0">
-            {isMobile && (
-              <button onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 -ml-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                <Menu size={18} />
-              </button>
-            )}
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-1.5 -ml-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              title="Toggle Sidebar"
+            >
+              <PanelLeft size={18} />
+            </button>
             <h1 className="text-[15px] font-semibold truncate">{currentPageName}</h1>
           </div>
           <Link
