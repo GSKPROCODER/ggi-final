@@ -71,7 +71,7 @@
   }
 
   .dark {
-    /* Premium Dark Mode (High contrast, neon crypto/cyber aesthetic) */
+    /* Premium Dark Mode — bumped muted-foreground/border for WCAG AA */
     --background: #050505;
     --foreground: #f8fafc;
     --card: #0A0C10;
@@ -83,7 +83,7 @@
     --secondary: #11141a;
     --secondary-foreground: #e2e8f0;
     --muted: #11141a;
-    --muted-foreground: #94a3b8;
+    --muted-foreground: #a1a9b8;
     --accent: #1e293b;
     --accent-foreground: #f8fafc;
     --destructive: #ef4444;
@@ -92,8 +92,8 @@
     --success-foreground: #050505;
     --warning: #fbbf24;
     --warning-foreground: #050505;
-    --border: rgba(255, 255, 255, 0.06);
-    --input: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.08);
     --ring: #38bdf8;
 
     /* Custom Architectural Variables */

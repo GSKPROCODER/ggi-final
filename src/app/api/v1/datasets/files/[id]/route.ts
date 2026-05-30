@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -30,7 +31,7 @@ export async function GET(
     } catch {
       return NextResponse.json({ detail: 'Dataset file not found locally.' }, { status: 404 });
     }
-  } catch (err: any) {
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status: 500 });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

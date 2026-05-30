@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { alerts, records } from '@/lib/db/schema';
@@ -59,8 +60,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(insertedAlerts);
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -9,12 +11,9 @@ import {
   FileText,
   Bell,
   Settings,
-  Menu,
   X,
   MessageSquare,
-  LogOut,
   ChevronLeft,
-  ChevronRight,
   Database,
   Bot,
   PieChart,
@@ -24,8 +23,8 @@ import {
   Command,
   PanelLeft,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useClerk, useUser } from '@clerk/nextjs';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
 import { datasetsApi } from '@/lib/api';
@@ -45,12 +44,6 @@ const workspaceNav = [
   { name: 'Settings',    path: '/dashboard/settings',  icon: Settings, exact: false },
 ];
 
-const contactNav = [
-  { name: 'Esther Howard', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', status: 'online' },
-  { name: 'Jacob Jones',   avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026703d', status: 'offline' },
-  { name: 'Cody Fisher',   avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d', status: 'online' },
-];
-
 /**
  * Main dashboard layout. Provides the premium responsive glassmorphic sidebar sidebar
  * along with active route indications and persistent AI quick chat links.
@@ -60,66 +53,108 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const currentPath = pathname || '';
-  const { signOut } = useClerk();
   const { user } = useUser();
   const router = useRouter();
+  const reduce = useReducedMotion();
 
-  // Zustand background processing states
-  const {
-    isBatchProcessing,
-    batchProgress,
-    batchStatus,
-    batchError,
-    processingDatasetId,
-    setBatchProcessing,
-    setDatasets,
-  } = useStore();
+  // Fine-grained Zustand selectors — unrelated slice updates don't re-render the layout.
+  const isBatchProcessing = useStore((s) => s.isBatchProcessing);
+  const batchProgress = useStore((s) => s.batchProgress);
+  const batchStatus = useStore((s) => s.batchStatus);
+  const batchError = useStore((s) => s.batchError);
+  const processingDatasetId = useStore((s) => s.processingDatasetId);
+  const setBatchProcessing = useStore((s) => s.setBatchProcessing);
+  const setDatasets = useStore((s) => s.setDatasets);
 
   const [showFloatingDone, setShowFloatingDone] = useState(false);
   const [lastProgress, setLastProgress] = useState(0);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Global Polling Engine
+  // Streamed dataset status — server pushes only when state changes,
+  // closes automatically when complete/failed, suspends while tab is hidden.
   useEffect(() => {
-    if (processingDatasetId) {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    if (!processingDatasetId) {
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
+      return;
+    }
 
-      pollIntervalRef.current = setInterval(async () => {
+    let cancelled = false;
+    let es: EventSource | null = null;
+
+    const open = () => {
+      if (cancelled || eventSourceRef.current) return;
+      es = new EventSource(`/api/v1/datasets/${processingDatasetId}/stream`);
+      eventSourceRef.current = es;
+
+      es.onmessage = async (event) => {
         try {
-          const status = await datasetsApi.getStatus(processingDatasetId);
-          const statusMsg = `Analyzed ${status.processed_count} of ${status.row_count} records`;
-          
-          if (status.status === 'completed' || status.status === 'failed') {
-            clearInterval(pollIntervalRef.current!);
-            pollIntervalRef.current = null;
-            
-            if (status.status === 'failed') {
-              setBatchProcessing(false, batchProgress, status.error_message || 'Analysis failed due to an error.', null, status.error_message || 'Analysis failed due to an error.');
+          const data = JSON.parse(event.data) as {
+            status?: string;
+            processed_count?: number;
+            row_count?: number;
+            percent?: number;
+            error_message?: string;
+            type?: string;
+          };
+          if (data.type === 'not_found') {
+            es?.close();
+            eventSourceRef.current = null;
+            return;
+          }
+          if (data.status === 'completed' || data.status === 'failed') {
+            if (data.status === 'failed') {
+              const msg = data.error_message || 'Analysis failed due to an error.';
+              setBatchProcessing(false, batchProgress, msg, null, msg);
             } else {
               setBatchProcessing(false, 100, '', null, null);
             }
-            
-            // Refresh dataset lists
+            es?.close();
+            eventSourceRef.current = null;
             const list = await datasetsApi.list();
             setDatasets(list);
-          } else {
-            setBatchProcessing(true, status.percent, statusMsg, processingDatasetId, null);
+            return;
+          }
+          if (typeof data.percent === 'number') {
+            const statusMsg = `Analyzed ${data.processed_count ?? 0} of ${data.row_count ?? 0} records`;
+            setBatchProcessing(true, data.percent, statusMsg, processingDatasetId, null);
           }
         } catch (err) {
-          console.error('Global status poll failed:', err);
+          console.error('Stream parse failed:', err);
         }
-      }, 3000);
-    } else {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
+      };
+
+      es.onerror = () => {
+        // EventSource auto-reconnects; only close if processing is done.
+        // Otherwise leave it to retry.
+      };
+    };
+
+    const close = () => {
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
+      es = null;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        close();
+      } else if (processingDatasetId) {
+        open();
       }
-    }
+    };
+
+    open();
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      close();
     };
-  }, [processingDatasetId]);
+    // batchProgress intentionally not in deps — it would re-open the stream on every tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processingDatasetId, setBatchProcessing, setDatasets]);
 
   // Floating done/error card transitions
   useEffect(() => {
@@ -153,9 +188,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     item.exact ? currentPath === item.path : currentPath.startsWith(item.path)
   )?.name || 'Overview';
 
-  const handleLogout = () => signOut({ redirectUrl: '/sign-in' });
   const displayName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.emailAddresses[0]?.emailAddress : 'User';
-  const displayEmail = user?.emailAddresses[0]?.emailAddress ?? '';
 
   const SIDEBAR_W = 220;
   const COLLAPSED_W = 68;
@@ -182,7 +215,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           width: isMobile ? SIDEBAR_W : (isSidebarOpen ? SIDEBAR_W : COLLAPSED_W),
           x: isMobile ? (isSidebarOpen ? 0 : -SIDEBAR_W) : 0,
         }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 32 }}
         className={cn(
           'h-[calc(100vh-2rem)] my-4 ml-4 flex flex-col shrink-0 z-30 overflow-visible relative',
           'rounded-[32px] border border-glass-border bg-glass shadow-soft',
@@ -256,6 +289,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
               return (
                 <Link key={item.path} href={item.path}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn('flex items-center gap-3 px-3 py-2.5 rounded-[14px] transition-all duration-200 group relative', isActive ? 'bg-secondary/80 border border-glass-border text-foreground font-medium shadow-sm' : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground border border-transparent')}
                 >
                   <item.icon size={18} className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
@@ -284,6 +318,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               const isActive = item.exact ? currentPath === item.path : currentPath.startsWith(item.path);
               return (
                 <Link key={item.path} href={item.path}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn('flex items-center gap-3 px-3 py-2.5 rounded-[14px] transition-all duration-200 group relative', isActive ? 'bg-secondary/80 border border-glass-border text-foreground font-medium shadow-sm' : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground border border-transparent')}
                 >
                   <item.icon size={18} className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
@@ -297,33 +332,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
-          </div>
-
-          {/* MESSAGES SECTION */}
-          <div className="space-y-1">
-            <AnimatePresence>
-              {isSidebarOpen && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2 flex items-center justify-between">
-                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Messages</p>
-                  <span className="text-muted-foreground/60 hover:text-foreground cursor-pointer">+</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            {contactNav.map(contact => (
-              <div key={contact.name} className={cn('flex items-center gap-3 px-3 py-2 rounded-[14px] transition-all duration-200 cursor-pointer group hover:bg-secondary/40', !isSidebarOpen && 'justify-center')}>
-                <div className="relative shrink-0">
-                  <img src={contact.avatar} alt={contact.name} className="w-6 h-6 rounded-full border border-border/50" />
-                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card", contact.status === 'online' ? 'bg-emerald-500' : 'bg-muted-foreground')} />
-                </div>
-                <AnimatePresence>
-                  {isSidebarOpen && (
-                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] text-muted-foreground group-hover:text-foreground whitespace-nowrap overflow-hidden">
-                      {contact.name}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
           </div>
 
         </div>

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { alerts } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
@@ -39,9 +40,8 @@ export async function GET(req: Request) {
         created_at: a.createdAt.toISOString(),
       }))
     );
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }
 
@@ -55,8 +55,7 @@ export async function DELETE(req: Request) {
     await db.delete(alerts).where(eq(alerts.userId, userId));
 
     return new Response(null, { status: 204 });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

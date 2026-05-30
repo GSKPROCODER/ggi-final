@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { analyzeText } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 
@@ -60,8 +61,7 @@ export async function POST(req: Request) {
         dominant_risk: dominantRisk,
       } : null,
     });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { verifyToken, generateTokens } from '@/lib/api/jwt';
 
 /**
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
       refresh_token: refreshToken,
       token_type: 'bearer',
     });
-  } catch (err: any) {
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status: 500 });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

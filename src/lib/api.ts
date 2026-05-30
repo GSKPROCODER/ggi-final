@@ -152,7 +152,19 @@ export interface AgentChatResponse {
 
 // ── Fetch Wrapper ──────────────────────────────────────────────────────────────
 
+import { ApiError } from './errors';
+export { ApiError } from './errors';
+
 const BASE_URL = '/api/v1';
+
+interface ValidationDetail {
+  loc?: string[];
+  msg: string;
+}
+
+function isValidationDetailArray(value: unknown): value is ValidationDetail[] {
+  return Array.isArray(value) && value.every((v) => typeof v === 'object' && v !== null && 'msg' in v);
+}
 
 async function request<T>(
   endpoint: string,
@@ -174,25 +186,28 @@ async function request<T>(
 
   // Clerk handles session via cookie — on 401 redirect to sign-in
   if (response.status === 401) {
-    window.location.href = '/sign-in';
-    throw new Error('Session expired. Please log in again.');
+    if (typeof window !== 'undefined') window.location.href = '/sign-in';
+    throw new ApiError(401, 'Session expired. Please log in again.');
   }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
+    let body: unknown = undefined;
+    let message = `Request failed: ${response.status}`;
     try {
-      const error = await response.json();
-      if (Array.isArray(error.detail)) {
-        errorMessage = error.detail
-          .map((e: any) => `${e.loc?.join('.')} ${e.msg}`)
-          .join(', ');
-      } else if (error.detail) {
-        errorMessage = error.detail;
-      } else if (error.message) {
-        errorMessage = error.message;
+      body = await response.json();
+      if (body && typeof body === 'object') {
+        const detail = (body as Record<string, unknown>).detail;
+        const msg = (body as Record<string, unknown>).message;
+        if (isValidationDetailArray(detail)) {
+          message = detail.map((e) => `${(e.loc ?? []).join('.')} ${e.msg}`).join(', ');
+        } else if (typeof detail === 'string') {
+          message = detail;
+        } else if (typeof msg === 'string') {
+          message = msg;
+        }
       }
-    } catch { /* ignore */ }
-    throw new Error(errorMessage);
+    } catch { /* body is not JSON, keep generic message */ }
+    throw new ApiError(response.status, message, body);
   }
 
   // Handle 204 No Content
@@ -311,6 +326,24 @@ export const agentApi = {
     }),
 };
 
+export interface EdaOverview {
+  total_records: number;
+  avg_chars: string;
+  status: string;
+  missing_analysis_pct: number;
+}
+
+export interface EdaDistributions {
+  sentiment: { name: string; value: number }[];
+  risk: { name: string; value: number }[];
+  length: { name: string; count: number }[];
+}
+
+export interface EdaMetrics {
+  overview: EdaOverview;
+  distributions: EdaDistributions;
+}
+
 export const edaApi = {
-  getEDAMetrics: (datasetId: string) => request<any>(`/eda/${datasetId}`),
+  getEDAMetrics: (datasetId: string) => request<EdaMetrics>(`/eda/${datasetId}`),
 };

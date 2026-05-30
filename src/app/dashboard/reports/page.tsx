@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   FileText, Plus, Trash2, Eye, EyeOff, Loader2, Download,
   Search, X, TrendingUp, AlertTriangle, Lightbulb, BarChart3
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { reportsApi } from '@/lib/api';
 import type { ReportListItem, ReportResponse } from '@/lib/api';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
@@ -21,35 +22,43 @@ export default function Reports() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const reduce = useReducedMotion();
 
   useEffect(() => {
+    let cancelled = false;
+    const loadReports = async () => {
+      setIsLoading(true);
+      try {
+        const data = await reportsApi.list();
+        if (!cancelled) setReports(data);
+      } catch (err) {
+        if (!cancelled) toast.error(err instanceof Error ? err.message : 'Failed to load reports.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
     loadReports();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  const loadReports = async () => {
-    setIsLoading(true);
-    try {
-      const data = await reportsApi.list();
-      setReports(data);
-    } catch { } finally {
-      setIsLoading(false);
-    }
-  };
 
   const generateReport = async () => {
     if (!reportTitle.trim()) return;
     setIsGenerating(true);
-    setError('');
     try {
       const report = await reportsApi.generate(reportTitle.trim());
-      setReports(prev => [{ id: report.id, title: report.title, overview: report.overview, created_at: report.created_at }, ...prev]);
+      setReports((prev) => [
+        { id: report.id, title: report.title, overview: report.overview, created_at: report.created_at },
+        ...prev,
+      ]);
       setSelectedReport(report);
       setIsPreviewOpen(true);
       setShowGenerate(false);
       setReportTitle('');
+      toast.success('Report generated.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Report generation failed. Ensure you have processed data first.');
+      toast.error(err instanceof Error ? err.message : 'Report generation failed. Ensure you have processed data first.');
     } finally {
       setIsGenerating(false);
     }
@@ -60,21 +69,28 @@ export default function Reports() {
       const report = await reportsApi.getById(id);
       setSelectedReport(report);
       setIsPreviewOpen(true);
-    } catch { }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to open report.');
+    }
   };
 
   const deleteReport = async (id: string) => {
     setDeletingId(id);
     try {
       await reportsApi.delete(id);
-      setReports(prev => prev.filter(r => r.id !== id));
-      if (selectedReport?.id === id) { setSelectedReport(null); setIsPreviewOpen(false); }
-    } catch { } finally {
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      if (selectedReport?.id === id) {
+        setSelectedReport(null);
+        setIsPreviewOpen(false);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete report.');
+    } finally {
       setDeletingId(null);
     }
   };
 
-  const exportPdf = () => {
+  const exportReportAsText = () => {
     if (!selectedReport) return;
     const content = `
 NEXUS AI INTELLIGENCE REPORT
@@ -104,10 +120,13 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
     const a = document.createElement('a'); a.href = url; a.download = `${selectedReport.title.replace(/\s+/g, '_')}.txt`; a.click();
   };
 
-  const filtered = reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return reports.filter((r) => r.title.toLowerCase().includes(q));
+  }, [reports, searchQuery]);
 
   return (
-    <div className="p-5 md:p-6 space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="p-5 md:p-6 space-y-6 w-full pb-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -128,15 +147,10 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
       {/* Generate Panel */}
       <AnimatePresence>
         {showGenerate && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+          <motion.div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             className="overflow-hidden">
             <div className="glass-card rounded-2xl border border-primary/20 bg-primary/5 p-6 space-y-4">
               <h3 className="font-semibold">Generate New Report</h3>
-              {error && (
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
               <div className="flex gap-3">
                 <input
                   value={reportTitle}
@@ -241,7 +255,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                   <p className="text-xs text-muted-foreground">{format(new Date(selectedReport.created_at), 'PPp')}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={exportPdf}
+                  <button onClick={exportReportAsText}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors">
                     <Download size={13} /> Export
                   </button>

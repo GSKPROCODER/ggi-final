@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { alerts } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
@@ -44,8 +45,7 @@ export async function PATCH(
       is_read: updated.isRead,
       created_at: updated.createdAt.toISOString(),
     });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

@@ -49,7 +49,7 @@ export default function Settings() {
   const handleLogout = () => signOut({ redirectUrl: '/sign-in' });
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="p-6 w-full space-y-8 pb-20">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your account preferences and application settings.</p>

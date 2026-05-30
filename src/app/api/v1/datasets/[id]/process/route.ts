@@ -1,4 +1,5 @@
-import { NextResponse, after } from 'next/server';
+﻿import { NextResponse, after } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
@@ -133,17 +134,17 @@ export async function POST(
           .set({ status: 'completed', insightsJson: JSON.stringify(insights) })
           .where(eq(datasets.id, datasetId));
 
-      } catch (err: any) {
+      } catch (err) {
         console.error('Background batch processing error:', err);
+        const message = err instanceof Error ? err.message : 'Background process aborted.';
         await db.update(datasets)
-          .set({ status: 'failed', errorMessage: err.message || 'Background process aborted.' })
+          .set({ status: 'failed', errorMessage: message })
           .where(eq(datasets.id, datasetId));
       }
     });
 
     return NextResponse.json({ message: 'Batch intelligence processing initialized.' });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

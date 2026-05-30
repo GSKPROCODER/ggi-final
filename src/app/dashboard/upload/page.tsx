@@ -480,7 +480,7 @@ Great value for money. Will definitely buy again.,4,Low
   const recentDatasets = datasets.slice(0, 3);
 
   return (
-    <div className="p-5 md:p-6 space-y-8 max-w-3xl mx-auto pb-16">
+    <div className="p-5 md:p-6 space-y-8 w-full pb-16">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

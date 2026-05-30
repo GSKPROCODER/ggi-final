@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { AlertTriangle, RefreshCw, Loader2, X, ChevronDown, ChevronUp, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { alertsApi } from '@/lib/api';
 import type { AlertResponse } from '@/lib/api';
 import { useStore } from '@/store/useStore';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 type SeverityFilter = 'all' | 'high' | 'medium' | 'low';
 
@@ -23,30 +24,40 @@ export default function Alerts() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
-  const { setAlerts: storeSetAlerts } = useStore();
+  const storeSetAlerts = useStore((s) => s.setAlerts);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
+    let cancelled = false;
+    const loadAlerts = async () => {
+      setIsLoading(true);
+      try {
+        const data = await alertsApi.list();
+        if (cancelled) return;
+        setAlerts(data);
+        storeSetAlerts(data);
+      } catch (err) {
+        if (!cancelled) toast.error(err instanceof Error ? err.message : 'Failed to load alerts.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
     loadAlerts();
-  }, []);
-
-  const loadAlerts = async () => {
-    setIsLoading(true);
-    try {
-      const data = await alertsApi.list();
-      setAlerts(data);
-      storeSetAlerts(data);
-    } catch { } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [storeSetAlerts]);
 
   const handleScan = async () => {
     setIsScanning(true);
     try {
       const newAlerts = await alertsApi.scan();
-      setAlerts(prev => [...newAlerts, ...prev]);
+      setAlerts((prev) => [...newAlerts, ...prev]);
       storeSetAlerts([...newAlerts, ...alerts]);
-    } catch { } finally {
+      toast.success(`Scan complete: ${newAlerts.length} new alert${newAlerts.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Anomaly scan failed.');
+    } finally {
       setIsScanning(false);
     }
   };
@@ -54,10 +65,12 @@ export default function Alerts() {
   const dismiss = async (id: string) => {
     try {
       await alertsApi.dismiss(id);
-      const updated = alerts.filter(a => a.id !== id);
+      const updated = alerts.filter((a) => a.id !== id);
       setAlerts(updated);
       storeSetAlerts(updated);
-    } catch { }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to dismiss alert.');
+    }
   };
 
   const clearAll = async () => {
@@ -65,26 +78,37 @@ export default function Alerts() {
       await alertsApi.clearAll();
       setAlerts([]);
       storeSetAlerts([]);
-    } catch { }
+      toast.success('All alerts cleared.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to clear alerts.');
+    }
   };
 
   const markRead = async (id: string) => {
     try {
       await alertsApi.markRead(id);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_read: true } : a));
-    } catch { }
+      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, is_read: true } : a)));
+    } catch {
+      /* silent — mark-read failures are non-critical */
+    }
   };
 
-  const filtered = filter === 'all' ? alerts : alerts.filter(a => a.severity === filter);
-  const counts = {
-    all: alerts.length,
-    high: alerts.filter(a => a.severity === 'high').length,
-    medium: alerts.filter(a => a.severity === 'medium').length,
-    low: alerts.filter(a => a.severity === 'low').length,
-  };
+  const filtered = useMemo(
+    () => (filter === 'all' ? alerts : alerts.filter((a) => a.severity === filter)),
+    [filter, alerts],
+  );
+  const counts = useMemo(
+    () => ({
+      all: alerts.length,
+      high: alerts.filter((a) => a.severity === 'high').length,
+      medium: alerts.filter((a) => a.severity === 'medium').length,
+      low: alerts.filter((a) => a.severity === 'low').length,
+    }),
+    [alerts],
+  );
 
   return (
-    <div className="p-5 md:p-6 space-y-6 max-w-5xl mx-auto pb-10">
+    <div className="p-5 md:p-6 space-y-6 w-full pb-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -162,8 +186,8 @@ export default function Alerts() {
               const cfg = SEVERITY_CONFIG[alert.severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.low;
               const isExpanded = expandedId === alert.id;
               return (
-                <motion.div key={alert.id} layout
-                  initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                <motion.div key={alert.id} layout={!reduce}
+                  initial={reduce ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0 }}
                   className={cn('glass-card rounded-2xl border p-5 transition-all', cfg.border, !alert.is_read && 'shadow-sm', alert.is_read && 'opacity-70')}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1 cursor-pointer"
@@ -196,7 +220,7 @@ export default function Alerts() {
                   {/* Expanded detail */}
                   <AnimatePresence>
                     {isExpanded && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                      <motion.div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
                         className="overflow-hidden">
                         <div className="mt-4 pt-4 border-t border-border/30 space-y-3">
                           <p className="text-sm text-foreground/90 leading-relaxed">{alert.message}</p>

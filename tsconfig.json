@@ -23,9 +23,8 @@
         "./src/*"
       ]
     },
-    "allowImportingTsExtensions": true,
     "noEmit": true,
-    "strict": false,
+    "strict": true,
     "incremental": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -34,7 +33,8 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "next-env.d.ts",

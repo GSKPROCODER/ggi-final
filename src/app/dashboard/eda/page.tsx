@@ -19,7 +19,7 @@ import {
   Filter
 } from "lucide-react";
 import { motion } from 'motion/react';
-import { edaApi, datasetsApi } from "@/lib/api";
+import { edaApi, datasetsApi, type EdaMetrics, type DatasetListItem } from "@/lib/api";
 import { toast } from "sonner";
 
 // Premium Color Palette
@@ -35,7 +35,17 @@ const COLORS = {
 
 const CHART_COLORS = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.success, COLORS.warning];
 
-const StatCard = ({ title, value, icon: Icon, trend, color }: any) => (
+import type { LucideIcon } from 'lucide-react';
+
+interface StatCardProps {
+  title: string;
+  value: string;
+  icon: LucideIcon;
+  trend?: string;
+  color: string;
+}
+
+const StatCard = ({ title, value, icon: Icon, trend, color }: StatCardProps) => (
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -61,7 +71,14 @@ const StatCard = ({ title, value, icon: Icon, trend, color }: any) => (
   </motion.div>
 );
 
-const ChartContainer = ({ title, description, children, icon: Icon }: any) => (
+interface ChartContainerProps {
+  title: string;
+  description?: string;
+  icon?: LucideIcon;
+  children: React.ReactNode;
+}
+
+const ChartContainer = ({ title, description, children, icon: Icon }: ChartContainerProps) => (
   <motion.div 
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
@@ -91,9 +108,9 @@ const ChartContainer = ({ title, description, children, icon: Icon }: any) => (
 
 const EDA: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-  const [selectedDataset, setSelectedDataset] = useState<string>("");
-  const [datasets, setDatasets] = useState<any[]>([]);
+  const [data, setData] = useState<EdaMetrics | null>(null);
+  const [selectedDataset, setSelectedDataset] = useState<string>('');
+  const [datasets, setDatasets] = useState<DatasetListItem[]>([]);
 
   useEffect(() => {
     loadInitialData();
@@ -145,11 +162,11 @@ const EDA: React.FC = () => {
   }
 
   // Map Backend Keys to Dashboard
-  const overview = data?.overview || {};
-  const distributions = data?.distributions || {};
+  const overview: Partial<EdaMetrics['overview']> = data?.overview ?? {};
+  const distributions: Partial<EdaMetrics['distributions']> = data?.distributions ?? {};
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="w-full space-y-8 pb-12 p-5 md:p-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2 text-indigo-400 text-[10px] font-bold uppercase tracking-[0.3em]">
@@ -231,7 +248,7 @@ const EDA: React.FC = () => {
                 paddingAngle={10}
                 dataKey="value"
               >
-                {distributions.sentiment?.map((entry: any, index: number) => (
+                {distributions.sentiment?.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="rgba(0,0,0,0)" />
                 ))}
               </Pie>
@@ -259,7 +276,7 @@ const EDA: React.FC = () => {
                 contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: 'none' }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                {distributions.risk?.map((entry: any, index: number) => (
+                {distributions.risk?.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.name === 'High' ? COLORS.danger : (entry.name === 'Medium' ? COLORS.warning : COLORS.success)} />
                 ))}
               </Bar>

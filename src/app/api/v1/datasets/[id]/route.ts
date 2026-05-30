@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { del } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
@@ -42,9 +43,8 @@ export async function GET(
       insights: d.insightsJson ? JSON.parse(d.insightsJson) : null,
       created_at: d.createdAt.toISOString(),
     });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }
 
@@ -91,8 +91,7 @@ export async function DELETE(
     } catch { /* blob or local file already deleted or not found */ }
 
     return new Response(null, { status: 204 });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

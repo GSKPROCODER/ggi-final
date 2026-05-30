@@ -1,11 +1,19 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import dynamic from 'next/dynamic';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Bot, Send, User, ChevronDown, ChevronRight, Sparkles, Loader2, KeySquare } from 'lucide-react';
 import { agentApi, type AgentMessage, type AgentLog } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
+import { toast } from 'sonner';
+
+// react-markdown is ~25KB+ — only loaded for assistant messages, never for the
+// initial empty-state render.
+const ReactMarkdown = dynamic(() => import('react-markdown'), {
+  ssr: false,
+  loading: () => <span className="text-muted-foreground text-sm">Rendering…</span>,
+});
 
 export default function AgentChat() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
@@ -13,6 +21,7 @@ export default function AgentChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [activeLogs, setActiveLogs] = useState<AgentLog[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,13 +52,14 @@ export default function AgentChat() {
     } catch (err) {
       const errorMsg: AgentMessage = { role: 'assistant', content: "⚠️ Critical Error: The Nexus Agent failed to process the request. Please verify the backend LangGraph connection." };
       setMessages(prev => [...prev, errorMsg]);
+      toast.error(err instanceof Error ? err.message : 'Agent request failed.');
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-5xl mx-auto py-6 animate-in fade-in zoom-in-95 duration-500">
+    <div className="flex flex-col h-[calc(100vh-2rem)] w-full py-6 px-5 md:px-6 animate-in fade-in zoom-in-95 duration-500">
       
       {/* Header */}
       <div className="flex flex-col gap-1 mb-6">
@@ -85,7 +95,7 @@ export default function AgentChat() {
             {messages.map((m, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
+                initial={reduce ? false : { opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn('flex gap-4 max-w-[85%]', m.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto')}
               >

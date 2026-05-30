@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
 import { analyzeText } from '@/lib/services/gemini';
@@ -48,8 +49,7 @@ export async function POST(req: Request) {
       recommendations: analysis.recommendations,
       created_at: new Date().toISOString(),
     });
-  } catch (err: any) {
-    const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

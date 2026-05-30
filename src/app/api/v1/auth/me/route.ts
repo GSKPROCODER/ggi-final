@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { requireAuth } from '@/lib/api/auth';
+import { handleApiError } from '@/lib/errors';
 
 export async function GET() {
   try {
@@ -14,8 +15,7 @@ export async function GET() {
       full_name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
       created_at: new Date(user.createdAt).toISOString(),
     });
-  } catch (err: any) {
-    const status = err.message?.startsWith('Unauthorized') ? 401 : 500;
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+  } catch (err) {
+    return handleApiError(err);
   }
 }

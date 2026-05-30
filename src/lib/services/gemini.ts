@@ -61,9 +61,10 @@ async function generateAIContent(prompt: string, jsonMode = false, temperature =
         temperature,
         jsonMode
       );
-    } catch (err: any) {
-      console.warn('Groq failed, trying Gemini...', err.message);
-      lastError = err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.warn('Groq failed, trying Gemini...', error.message);
+      lastError = error;
     }
   }
 
@@ -92,9 +93,10 @@ async function generateAIContent(prompt: string, jsonMode = false, temperature =
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) throw new Error('Gemini returned empty response.');
       return text;
-    } catch (err: any) {
-      console.warn('Gemini failed, trying OpenRouter...', err.message);
-      lastError = err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.warn('Gemini failed, trying OpenRouter...', error.message);
+      lastError = error;
     }
   }
 
@@ -110,9 +112,10 @@ async function generateAIContent(prompt: string, jsonMode = false, temperature =
         jsonMode,
         { 'HTTP-Referer': 'https://nexus-ai.local', 'X-Title': 'Nexus AI' }
       );
-    } catch (err: any) {
-      console.warn('OpenRouter failed.', err.message);
-      lastError = err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.warn('OpenRouter failed.', error.message);
+      lastError = error;
     }
   }
 
