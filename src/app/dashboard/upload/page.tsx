@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect, type DragEvent } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Upload, FileText, CheckCircle2, AlertCircle, ChevronRight,
-  ArrowRight, Loader2, X, Columns
+  ArrowRight, Loader2, X, Columns, Search, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { datasetsApi } from '@/lib/api';
@@ -21,8 +21,10 @@ export default function UploadData() {
   const [file, setFile] = useState<File | null>(null);
   const [dataset, setDataset] = useState<DatasetDetailResponse | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
+  const [isShaking, setIsShaking] = useState(false);
   const [processingTime, setProcessingTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -56,6 +58,8 @@ export default function UploadData() {
     const fn = f.name.toLowerCase();
     if (!fn.endsWith('.csv') && !fn.endsWith('.xlsx')) {
       setError('Only CSV and Excel (.xlsx) files are supported.');
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
       return;
     }
     setError('');
@@ -166,19 +170,22 @@ Great value for money. Will definitely buy again.,4,Low
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-sm text-destructive">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle size={16} />{error}
-        </div>
+        </motion.div>
       )}
 
-      <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+      <motion.div
+        animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
+        transition={{ duration: 0.4 }}
+        onDragOver={(e: any) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
           'relative border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300',
-          isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border/50 hover:border-primary/50 hover:bg-secondary/20'
+          isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border/50 hover:border-primary/50 hover:bg-secondary/20',
+          error ? 'border-destructive/50 bg-destructive/5 hover:border-destructive' : ''
         )}
       >
         <input ref={fileInputRef} type="file" accept=".csv, .xlsx" className="hidden"
@@ -209,7 +216,7 @@ Great value for money. Will definitely buy again.,4,Low
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Example datasets hint */}
       <div className="glass-card p-4 rounded-xl border border-border/40">
@@ -223,62 +230,105 @@ Great value for money. Will definitely buy again.,4,Low
     </motion.div>
   );
 
-  const renderColumnMapping = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold mb-1">Select Text Columns</h2>
-          <p className="text-muted-foreground">
-            Choose one or more columns that contain the text you want to analyze.
-            <span className="text-primary font-medium"> {dataset?.original_filename}</span> has {dataset?.row_count?.toLocaleString()} rows and {dataset?.columns.length} columns.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSelectedColumns(dataset?.columns || [])}
-            className="text-[10px] uppercase font-bold tracking-wider text-primary hover:underline"
-          >
-            Select All
-          </button>
-          <span className="text-border">|</span>
-          <button
-            onClick={() => setSelectedColumns([])}
-            className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground hover:underline"
-          >
-            Clear All
-          </button>
-        </div>
-      </div>
+  const renderColumnMapping = () => {
+    const recommendedCols = dataset?.columns.filter(c => /review|text|comment|feedback|content|message|body|description|title/i.test(c)) || [];
+    const filteredCols = dataset?.columns.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())) || [];
 
-      <div className="grid gap-3">
-        {dataset?.columns.map((col) => {
-          const sample = dataset.sample_rows.slice(0, 3).map(r => r[col]).filter(Boolean).join(' · ').slice(0, 80);
-          const isLikely = /review|text|comment|feedback|content|message|body|description/i.test(col);
-          return (
-            <motion.div
-              key={col}
-              whileHover={{ scale: 1.01 }}
-              onClick={() => setSelectedColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col])}
-              className={cn(
-                'p-4 rounded-xl border cursor-pointer transition-all',
-                selectedColumns.includes(col)
-                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
-                  : 'border-border/50 hover:border-primary/30 glass-card'
-              )}
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold mb-1">Select Text Columns</h2>
+            <p className="text-muted-foreground text-sm">
+              Choose one or more columns that contain the text you want to analyze.
+              <span className="text-primary font-medium"> {dataset?.original_filename}</span> has {dataset?.row_count?.toLocaleString()} rows.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (recommendedCols.length > 0) setSelectedColumns(recommendedCols);
+            }}
+            className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-all hover:scale-[1.01]"
+          >
+            <Sparkles size={14} /> Select Recommended
+          </button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-secondary/30 p-3 rounded-xl border border-border/40">
+          <div className="relative w-full sm:w-72">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search columns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-background border border-border/50 rounded-lg text-sm focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs text-muted-foreground">{selectedColumns.length} selected</span>
+            <span className="text-border">|</span>
+            <button
+              onClick={() => setSelectedColumns(dataset?.columns || [])}
+              className="text-[11px] uppercase font-bold tracking-wider text-primary hover:underline"
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <Columns size={16} className={selectedColumns.includes(col) ? 'text-primary' : 'text-muted-foreground'} />
-                  <span className="font-semibold text-sm">{col}</span>
-                  {isLikely && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded-full">Recommended</span>}
+              Select All
+            </button>
+            <button
+              onClick={() => setSelectedColumns([])}
+              className="text-[11px] uppercase font-bold tracking-wider text-muted-foreground hover:underline ml-2"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div className="grid gap-3 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
+          {filteredCols.length === 0 && (
+            <div className="text-center p-8 text-muted-foreground text-sm border rounded-xl border-dashed">
+              No columns match "{searchQuery}"
+            </div>
+          )}
+          {filteredCols.map((col) => {
+            const isLikely = recommendedCols.includes(col);
+            const isSelected = selectedColumns.includes(col);
+            
+            return (
+              <motion.div
+                key={col}
+                whileHover={{ scale: 1.01 }}
+                onClick={() => setSelectedColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col])}
+                className={cn(
+                  'p-4 rounded-xl border cursor-pointer transition-all',
+                  isSelected
+                    ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                    : 'border-border/50 hover:border-primary/30 glass-card'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Columns size={16} className={isSelected ? 'text-primary' : 'text-muted-foreground'} />
+                    <span className="font-semibold text-sm">{col}</span>
+                    {isLikely && <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-primary/20 text-primary rounded-full tracking-wider">Recommended</span>}
+                  </div>
+                  {isSelected && <CheckCircle2 size={18} className="text-primary" />}
                 </div>
-                {selectedColumns.includes(col) && <CheckCircle2 size={18} className="text-primary" />}
-              </div>
-              {sample && <p className="text-xs text-muted-foreground truncate mt-1">{sample}...</p>}
-            </motion.div>
-          );
-        })}
-      </div>
+                
+                {/* Data Preview Grid */}
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none opacity-80 hover:opacity-100 transition-opacity">
+                  {dataset?.sample_rows.slice(0, 3).map((r, i) => (
+                    <div key={i} className={cn(
+                      "shrink-0 max-w-[220px] p-2 rounded-lg text-[11px] truncate border",
+                      isSelected ? "bg-background/80 border-primary/20 text-foreground" : "bg-background/50 border-border/30 text-muted-foreground"
+                    )} title={String(r[col] || '')}>
+                      {r[col] ? String(r[col]) : <span className="opacity-40 italic">null</span>}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
 
       <div className="flex gap-3 pt-2">
         <button onClick={() => setStep('upload')} className="px-5 py-2.5 rounded-xl border border-border/50 text-sm text-muted-foreground hover:bg-secondary/30 transition-colors">
@@ -294,6 +344,7 @@ Great value for money. Will definitely buy again.,4,Low
       </div>
     </motion.div>
   );
+  };
 
   const renderProcessing = () => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 py-8">
@@ -468,13 +519,19 @@ Great value for money. Will definitely buy again.,4,Low
       </div>
 
       {/* Step content */}
-      <AnimatePresence mode="wait">
-        <div key={step}>
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 15, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -15, scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+        >
           {step === 'upload' && renderUpload()}
           {step === 'columns' && renderColumnMapping()}
           {step === 'process' && renderProcessing()}
           {step === 'done' && renderDone()}
-        </div>
+        </motion.div>
       </AnimatePresence>
 
       {/* QoL Recent Activity Panel (only shown on upload step for clean UI) */}

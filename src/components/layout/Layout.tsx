@@ -158,7 +158,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-background/70 backdrop-blur-sm z-20 md:hidden"
+            className="fixed inset-0 bg-background/70 backdrop-blur-md z-20 md:hidden"
           />
         )}
       </AnimatePresence>
@@ -340,7 +340,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }
               }}
               className={cn(
-                "fixed bottom-6 right-6 z-50 w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
+                "fixed bottom-6 right-6 z-[999] w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
                 "bg-[#0f172a]/90 backdrop-blur-xl shadow-2xl hover:scale-[1.02]",
                 isBatchProcessing 
                   ? "border-primary/40 shadow-primary/10" 
