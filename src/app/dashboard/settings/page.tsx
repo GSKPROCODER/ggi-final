@@ -48,9 +48,13 @@ export default function Settings() {
         <p className="text-muted-foreground">Manage your account preferences and application settings.</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col md:flex-row rounded-3xl border border-border/40 bg-[#0B101E]/60 backdrop-blur-2xl shadow-2xl min-h-[600px] relative overflow-hidden">
+        {/* Subtle top glare */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-10" />
+
         {/* Sidebar */}
-        <div className="w-full md:w-64 space-y-2 shrink-0">
+        <div className="w-full md:w-72 shrink-0 flex flex-col border-r border-border/40 bg-background/20 relative z-10">
+          <div className="p-6 space-y-2 flex-1">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -72,7 +76,8 @@ export default function Settings() {
               </button>
             );
           })}
-          <div className="pt-4 mt-4 border-t border-border/50">
+          </div>
+          <div className="p-6 border-t border-border/40 bg-background/20">
             <button onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-destructive/80 hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all">
               Sign Out
@@ -81,18 +86,16 @@ export default function Settings() {
         </div>
 
         {/* Content */}
-        <div className="flex-1">
+        <div className="flex-1 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 15, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="bg-[#0B101E]/80 backdrop-blur-3xl rounded-3xl border border-border/40 p-8 space-y-10 shadow-2xl relative overflow-hidden"
+              className="p-10 space-y-10"
             >
-              {/* Subtle top glare */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
             {activeTab === 'profile' && (
               <div className="space-y-8">
@@ -159,6 +162,14 @@ export default function Settings() {
                     <p className="font-semibold text-primary mb-1">AI Processing is Secure</p>
                     <p className="text-foreground/70 text-xs leading-relaxed">Your data parsing falls back securely to OpenRouter or Groq based on strict routing policies.</p>
                   </div>
+                </div>
+
+                <div className="pt-8 border-t border-border/40 flex justify-end">
+                  <button onClick={handleSaveProfile} disabled={isSaving}
+                    className="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(var(--primary),0.3)] disabled:opacity-60 disabled:hover:scale-100">
+                    <Save size={18} />
+                    <span>{isSaving ? 'Saving...' : 'Save Profile'}</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -243,13 +254,6 @@ export default function Settings() {
               </div>
             )}
 
-            <div className="pt-8 border-t border-border/40 flex justify-end">
-              <button onClick={handleSaveProfile} disabled={isSaving}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(var(--primary),0.3)] disabled:opacity-60 disabled:hover:scale-100">
-                <Save size={18} />
-                <span>{isSaving ? 'Saving...' : 'Save Preferences'}</span>
-              </button>
-            </div>
           </motion.div>
           </AnimatePresence>
         </div>
