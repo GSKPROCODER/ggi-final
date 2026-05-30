@@ -1,0 +1,36 @@
+import { NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
+
+/**
+ * Handles GET requests to retrieve a locally stored CSV dataset file by ID.
+ */
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+
+    if (!id) {
+      return NextResponse.json({ detail: 'Dataset ID is required.' }, { status: 400 });
+    }
+
+    const filePath = path.join(process.cwd(), 'nexus-uploads', `${id}.csv`);
+
+    try {
+      const csvText = await fs.readFile(filePath, 'utf-8');
+      return new NextResponse(csvText, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${id}.csv"`,
+        },
+      });
+    } catch {
+      return NextResponse.json({ detail: 'Dataset file not found locally.' }, { status: 404 });
+    }
+  } catch (err: any) {
+    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status: 500 });
+  }
+}

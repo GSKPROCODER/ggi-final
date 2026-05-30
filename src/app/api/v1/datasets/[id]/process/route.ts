@@ -4,6 +4,8 @@ import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
+import fs from 'fs/promises';
+import path from 'path';
 
 function parseCsvLine(line: string): string[] {
   const result: string[] = [];
@@ -61,10 +63,17 @@ export async function POST(
     // after() keeps the Vercel function alive after the response is sent
     after(async () => {
       try {
-        // Fetch CSV from Vercel Blob (d.filename stores the blob URL)
-        const fileRes = await fetch(d.filename);
-        if (!fileRes.ok) throw new Error('Could not retrieve uploaded file from storage.');
-        const content = await fileRes.text();
+        let content = '';
+
+        // Fetch CSV from Vercel Blob or read directly from disk if local
+        if (d.filename?.includes('/api/v1/datasets/files/')) {
+          const filePath = path.join(process.cwd(), 'nexus-uploads', `${datasetId}.csv`);
+          content = await fs.readFile(filePath, 'utf-8');
+        } else {
+          const fileRes = await fetch(d.filename);
+          if (!fileRes.ok) throw new Error('Could not retrieve uploaded file from storage.');
+          content = await fileRes.text();
+        }
 
         const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
         const headers = parseCsvLine(lines[0]);

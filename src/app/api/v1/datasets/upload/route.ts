@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import * as XLSX from 'xlsx';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Parse a CSV line respecting quotes containing commas.
@@ -105,15 +107,29 @@ export async function POST(req: Request) {
     const { headers, rowCount, sampleRows, rawCsvText } = await parseFileContent(file);
 
     const datasetId = crypto.randomUUID();
-    const serverFilename = `datasets/${datasetId}_${originalFilename.replace(/\.xlsx?$/i, '.csv')}`;
+    let fileUrl = '';
 
-    // Store CSV in Vercel Blob — URL persists across serverless invocations
-    const blob = await put(serverFilename, rawCsvText, { access: 'public' });
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const serverFilename = `datasets/${datasetId}_${originalFilename.replace(/\.xlsx?$/i, '.csv')}`;
+      const blob = await put(serverFilename, rawCsvText, { access: 'public' });
+      fileUrl = blob.url;
+    } else {
+      // Local file fallback
+      const uploadDir = path.join(process.cwd(), 'nexus-uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(uploadDir, `${datasetId}.csv`), rawCsvText, 'utf-8');
+
+      const host = req.headers.get('host') ?? 'localhost:3000';
+      const protocol = req.headers.get('x-forwarded-proto') ?? 'http';
+      fileUrl = `${protocol}://${host}/api/v1/datasets/files/${datasetId}`;
+    }
 
     await db.insert(datasets).values({
       id: datasetId,
       userId,
-      filename: blob.url,
+      filename: fileUrl,
       originalFilename,
       rowCount,
       columnsJson: JSON.stringify(headers),
@@ -123,7 +139,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       id: datasetId,
-      filename: blob.url,
+      filename: fileUrl,
       original_filename: originalFilename,
       columns: headers,
       row_count: rowCount,

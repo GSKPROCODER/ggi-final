@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Handles GET requests to retrieve detailed dataset parameters.
@@ -76,12 +78,17 @@ export async function DELETE(
     // Clear dataset meta
     await db.delete(datasets).where(eq(datasets.id, datasetId));
 
-    // Delete file from Vercel Blob (filename stores the blob URL)
+    // Delete file from Vercel Blob or local storage
     try {
-      if (d.filename?.startsWith('http')) {
+      if (d.filename?.includes('/api/v1/datasets/files/')) {
+        const filePath = path.join(process.cwd(), 'nexus-uploads', `${datasetId}.csv`);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } else if (d.filename?.startsWith('http')) {
         await del(d.filename);
       }
-    } catch { /* blob already deleted or not found */ }
+    } catch { /* blob or local file already deleted or not found */ }
 
     return new Response(null, { status: 204 });
   } catch (err: any) {

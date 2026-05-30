@@ -15,7 +15,7 @@ function getDb(): DbInstance {
   // Neon serverless requires the Neon HTTP endpoint; local Docker uses standard TCP.
   _db = url.includes('neon.tech')
     ? drizzleNeon(neon(url), { schema })
-    : drizzlePg(new Pool({ connectionString: url }), { schema });
+    : drizzlePg(new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } }), { schema });
   return _db;
 }
 
