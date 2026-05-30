@@ -149,7 +149,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const COLLAPSED_W = 68;
 
   return (
-    <div className="flex h-screen w-screen bg-background overflow-hidden dark">
+    <div className="flex h-screen w-screen bg-background overflow-hidden">
       {/* Mobile backdrop */}
       <AnimatePresence>
         {isMobile && isSidebarOpen && (
@@ -273,7 +273,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   transition={{ duration: 0.1 }}
                   className="flex-1 min-w-0"
                 >
-                  <p className="text-[13px] font-medium truncate leading-tight">{displayName}</p>
+                  <p className="text-[13px] font-semibold truncate leading-tight">{displayName}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{displayEmail}</p>
                 </motion.div>
               )}
@@ -281,7 +281,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {isSidebarOpen && (
               <button onClick={handleLogout} title="Sign out"
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0">
-                <LogOut size={14} />
+                <LogOut size={16} />
               </button>
             )}
           </div>

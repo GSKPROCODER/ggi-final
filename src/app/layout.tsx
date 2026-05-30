@@ -2,6 +2,7 @@ import {ClerkProvider} from "@clerk/nextjs";
 import '@/index.css';
 import { Metadata } from 'next';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'Nexus AI — Executive Text Intelligence & Data Analytics',
@@ -18,15 +19,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="min-h-screen bg-background text-foreground antialiased transition-colors duration-300">
         <ClerkProvider>
-          {children}
-          <Toaster theme="dark" position="bottom-right" richColors />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+            <Toaster position="bottom-right" richColors />
+          </ThemeProvider>
         </ClerkProvider>
       </body>
     </html>

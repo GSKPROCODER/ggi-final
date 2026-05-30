@@ -38,55 +38,69 @@
 
 @layer base {
   :root {
-    --background: #fafafa;
-    --foreground: #0a0a0a;
+    /* Premium Light Mode (Crisp, Apple/Stripe aesthetic) */
+    --background: #f8fafc;
+    --foreground: #0f172a;
     --card: #ffffff;
-    --card-foreground: #0a0a0a;
+    --card-foreground: #0f172a;
     --popover: #ffffff;
-    --popover-foreground: #0a0a0a;
-    --primary: #6366f1;
+    --popover-foreground: #0f172a;
+    --primary: #2563eb;
     --primary-foreground: #ffffff;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #18181b;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --accent: #f4f4f5;
-    --accent-foreground: #18181b;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #334155;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
-    --success: #22c55e;
+    --success: #10b981;
     --success-foreground: #ffffff;
     --warning: #f59e0b;
     --warning-foreground: #000000;
-    --border: #e4e4e7;
-    --input: #e4e4e7;
-    --ring: #6366f1;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #2563eb;
+
+    /* Custom Architectural Variables */
+    --glass-surface: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.05);
+    --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.15);
+    --shadow-soft: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
   }
 
   .dark {
-    --background: #07070a;
-    --foreground: #f0f0f5;
-    --card: #0e0e14;
-    --card-foreground: #f0f0f5;
-    --popover: #0e0e14;
-    --popover-foreground: #f0f0f5;
-    --primary: #818cf8;
-    --primary-foreground: #07070a;
-    --secondary: #14141c;
-    --secondary-foreground: #f0f0f5;
-    --muted: #14141c;
-    --muted-foreground: #71717a;
-    --accent: #1a1a24;
-    --accent-foreground: #f0f0f5;
-    --destructive: #f87171;
-    --destructive-foreground: #07070a;
+    /* Premium Dark Mode (High contrast, neon crypto/cyber aesthetic) */
+    --background: #050505;
+    --foreground: #f8fafc;
+    --card: #0A0C10;
+    --card-foreground: #f8fafc;
+    --popover: #0A0C10;
+    --popover-foreground: #f8fafc;
+    --primary: #38bdf8;
+    --primary-foreground: #050505;
+    --secondary: #11141a;
+    --secondary-foreground: #e2e8f0;
+    --muted: #11141a;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+    --destructive: #ef4444;
+    --destructive-foreground: #050505;
     --success: #4ade80;
-    --success-foreground: #07070a;
+    --success-foreground: #050505;
     --warning: #fbbf24;
-    --warning-foreground: #07070a;
-    --border: #1e1e2a;
-    --input: #1e1e2a;
-    --ring: #818cf8;
+    --warning-foreground: #050505;
+    --border: rgba(255, 255, 255, 0.06);
+    --input: rgba(255, 255, 255, 0.06);
+    --ring: #38bdf8;
+
+    /* Custom Architectural Variables */
+    --glass-surface: rgba(10, 12, 16, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+    --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -117,30 +131,32 @@
 }
 
 @layer utilities {
-  /* Glass surface */
+  /* Strict Semantic Glass Component */
   .glass-card {
-    background: color-mix(in srgb, var(--card) 85%, transparent);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--glass-surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
   }
 
   .glass-card:hover {
-    border-color: color-mix(in srgb, var(--border) 90%, transparent);
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.15);
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--glass-border));
+    box-shadow: var(--shadow-glow);
   }
 
   .glass-panel {
-    background: color-mix(in srgb, var(--background) 90%, transparent);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: color-mix(in srgb, var(--background) 80%, transparent);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid var(--glass-border);
   }
 
   .glass {
-    background: rgba(255,255,255,0.04);
+    background: var(--glass-surface);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--glass-border);
   }
 
   /* Text gradient */

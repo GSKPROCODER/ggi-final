@@ -1,22 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Save, User, Bell, Shield, Database, Moon, Sun, Monitor, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
+import { useTheme } from 'next-themes';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { signOut } = useClerk();
   const { user } = useUser();
+  const { theme, setTheme } = useTheme();
 
   const [fullName, setFullName] = useState(
     user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '',
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -48,7 +55,7 @@ export default function Settings() {
         <p className="text-muted-foreground">Manage your account preferences and application settings.</p>
       </div>
 
-      <div className="flex flex-col md:flex-row rounded-3xl border border-border/40 bg-[#0B101E]/60 backdrop-blur-2xl shadow-2xl min-h-[600px] relative overflow-hidden">
+      <div className="flex flex-col md:flex-row rounded-3xl border border-border/40 bg-glass shadow-soft min-h-[600px] relative overflow-hidden">
         {/* Subtle top glare */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-10" />
 
@@ -79,7 +86,7 @@ export default function Settings() {
           </div>
           <div className="p-6 border-t border-border/40 bg-background/20">
             <button onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-destructive/80 hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all">
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all">
               Sign Out
             </button>
           </div>
@@ -119,7 +126,7 @@ export default function Settings() {
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
                       </div>
                       <input type="email" value={user?.emailAddresses[0]?.emailAddress ?? ''} disabled
-                        className="w-full bg-secondary/30 border border-border/30 rounded-xl pl-11 pr-4 py-3 text-sm opacity-60 cursor-not-allowed shadow-inner text-muted-foreground" />
+                        className="w-full bg-secondary/30 border border-border/30 rounded-xl pl-11 pr-4 py-3 text-sm opacity-90 cursor-not-allowed shadow-inner text-foreground" />
                     </div>
                     <p className="text-[11px] text-muted-foreground ml-1">Verified and managed securely by Clerk.</p>
                   </div>
@@ -131,26 +138,63 @@ export default function Settings() {
                   <h3 className="text-lg font-semibold mb-1">Appearance</h3>
                   <p className="text-sm text-muted-foreground mb-4">Customize how Nexus AI looks on your device.</p>
                   <div className="grid grid-cols-3 gap-4">
-                    <button className="relative flex flex-col items-center gap-4 p-6 rounded-2xl border border-primary/30 bg-primary/10 text-primary overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />
-                      <motion.div initial={{ rotate: -15 }} animate={{ rotate: 0 }} transition={{ duration: 0.5, type: 'spring' }} className="relative z-10 p-3 rounded-full bg-primary/20 border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)] group-hover:scale-110 transition-transform">
+                    {mounted && (
+                      <>
+                        <button 
+                          onClick={() => setTheme('dark')}
+                          className={cn(
+                            "relative flex flex-col items-center gap-4 p-6 rounded-2xl border transition-all duration-300 overflow-hidden group",
+                            theme === 'dark' ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-secondary/20 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                          )}
+                    >
+                      {theme === 'dark' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
+                      <motion.div initial={{ rotate: 0 }} animate={{ rotate: theme === 'dark' ? 0 : -15 }} transition={{ duration: 0.5, type: 'spring' }} 
+                        className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'dark' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
+                        style={theme === 'dark' ? { boxShadow: 'var(--shadow-glow)' } : {}}
+                      >
                         <Moon size={24} />
                       </motion.div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">Dark</span>
-                      <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),1)]" />
+                      {theme === 'dark' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
                     </button>
-                    <button className="flex flex-col items-center gap-4 p-6 rounded-2xl border border-border/50 bg-secondary/20 text-muted-foreground cursor-not-allowed opacity-60">
-                      <div className="p-3 rounded-full bg-background border border-border/50">
+                    
+                    <button 
+                      onClick={() => setTheme('light')}
+                      className={cn(
+                        "relative flex flex-col items-center gap-4 p-6 rounded-2xl border transition-all duration-300 overflow-hidden group",
+                        theme === 'light' ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-secondary/20 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                      )}
+                    >
+                      {theme === 'light' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
+                      <motion.div initial={{ rotate: 0 }} animate={{ rotate: theme === 'light' ? 0 : 15 }} transition={{ duration: 0.5, type: 'spring' }} 
+                        className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'light' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
+                        style={theme === 'light' ? { boxShadow: 'var(--shadow-glow)' } : {}}
+                      >
                         <Sun size={24} />
-                      </div>
-                      <span className="text-sm font-medium tracking-wide">Light</span>
+                      </motion.div>
+                      <span className="relative z-10 text-sm font-semibold tracking-wide">Light</span>
+                      {theme === 'light' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
                     </button>
-                    <button className="flex flex-col items-center gap-4 p-6 rounded-2xl border border-border/50 bg-secondary/20 text-muted-foreground cursor-not-allowed opacity-60">
-                      <div className="p-3 rounded-full bg-background border border-border/50">
+
+                    <button 
+                      onClick={() => setTheme('system')}
+                      className={cn(
+                        "relative flex flex-col items-center gap-4 p-6 rounded-2xl border transition-all duration-300 overflow-hidden group",
+                        theme === 'system' ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-secondary/20 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                      )}
+                    >
+                      {theme === 'system' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
+                      <motion.div initial={{ scale: 1 }} animate={{ scale: theme === 'system' ? 1.1 : 1 }} transition={{ duration: 0.5, type: 'spring' }} 
+                        className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'system' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
+                        style={theme === 'system' ? { boxShadow: 'var(--shadow-glow)' } : {}}
+                      >
                         <Monitor size={24} />
-                      </div>
-                      <span className="text-sm font-medium tracking-wide">System</span>
+                      </motion.div>
+                      <span className="relative z-10 text-sm font-semibold tracking-wide">System</span>
+                      {theme === 'system' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
                     </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
