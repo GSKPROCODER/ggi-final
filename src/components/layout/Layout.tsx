@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Search,
   LayoutDashboard,
   BarChart3,
   UploadCloud,
@@ -13,30 +14,40 @@ import {
   MessageSquare,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   Database,
   Bot,
   PieChart,
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Command,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
-import Logo from '@/components/Logo';
 import { useStore } from '@/store/useStore';
 import { datasetsApi } from '@/lib/api';
 
-const navItems = [
+const mainNav = [
   { name: 'Dashboard',   path: '/dashboard',           icon: LayoutDashboard, exact: true },
   { name: 'Analyze',     path: '/dashboard/analyze',   icon: BarChart3 },
   { name: 'EDA & Insights', path: '/dashboard/eda',    icon: PieChart },
-  { name: 'Upload Data', path: '/dashboard/upload',    icon: UploadCloud },
   { name: 'Nexus Agent', path: '/dashboard/agent',     icon: Bot },
+];
+
+const workspaceNav = [
+  { name: 'Upload Data', path: '/dashboard/upload',    icon: UploadCloud },
   { name: 'History',     path: '/dashboard/history',   icon: Database },
   { name: 'Reports',     path: '/dashboard/reports',   icon: FileText },
   { name: 'Alerts',      path: '/dashboard/alerts',    icon: Bell },
   { name: 'Settings',    path: '/dashboard/settings',  icon: Settings },
+];
+
+const contactNav = [
+  { name: 'Esther Howard', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', status: 'online' },
+  { name: 'Jacob Jones',   avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026703d', status: 'offline' },
+  { name: 'Cody Fisher',   avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d', status: 'online' },
 ];
 
 /**
@@ -137,7 +148,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (isMobile) setIsSidebarOpen(false);
   }, [pathname, isMobile]);
 
-  const currentPageName = navItems.find(item =>
+  const currentPageName = [...mainNav, ...workspaceNav].find(item =>
     item.exact ? currentPath === item.path : currentPath.startsWith(item.path)
   )?.name || 'Overview';
 
