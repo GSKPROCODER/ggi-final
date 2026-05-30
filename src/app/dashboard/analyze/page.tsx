@@ -163,7 +163,7 @@ export default function Analyze() {
   };
 
   return (
-    <div className="p-5 md:p-6 space-y-6 max-w-5xl mx-auto pb-10">
+    <div className="p-5 md:p-8 space-y-6 w-full pb-10">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
