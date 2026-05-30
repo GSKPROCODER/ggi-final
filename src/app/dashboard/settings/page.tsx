@@ -51,100 +51,143 @@ export default function Settings() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <div className="w-full md:w-64 space-y-2 shrink-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
-                activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <tab.icon size={18} />
-              {tab.label}
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'relative w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 overflow-hidden',
+                  isActive
+                    ? 'text-primary bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(var(--primary),0.1)]'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent'
+                )}
+              >
+                {isActive && (
+                  <motion.div layoutId="active-tab" className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                )}
+                <tab.icon size={18} className={cn("transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
+                {tab.label}
+              </button>
+            );
+          })}
+          <div className="pt-4 mt-4 border-t border-border/50">
+            <button onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-destructive/80 hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all">
+              Sign Out
             </button>
-          ))}
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all mt-4">
-            Sign Out
-          </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="glass-card rounded-2xl border border-border/50 p-8 space-y-8"
-          >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="bg-[#0B101E]/80 backdrop-blur-3xl rounded-3xl border border-border/40 p-8 space-y-10 shadow-2xl relative overflow-hidden"
+            >
+              {/* Subtle top glare */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
             {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                    <input type="text" value={fullName} onChange={e => setFullName(e.target.value)}
-                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-semibold">Personal Information</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Update your personal details here.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2 md:col-span-2 relative group">
+                    <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground ml-1">Full Name</label>
+                    <div className="relative">
+                      <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <input type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                        className="w-full bg-background/50 border border-border/50 hover:border-border rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all shadow-inner" />
+                    </div>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-muted-foreground">Email Address</label>
-                    <input type="email" value={user?.emailAddresses[0]?.emailAddress ?? ''} disabled
-                      className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-2.5 text-sm opacity-60 cursor-not-allowed" />
-                    <p className="text-xs text-muted-foreground">Email is managed by Clerk.</p>
+                  <div className="space-y-2 md:col-span-2 relative group">
+                    <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground ml-1">Email Address</label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <input type="email" value={user?.emailAddresses[0]?.emailAddress ?? ''} disabled
+                        className="w-full bg-secondary/30 border border-border/30 rounded-xl pl-11 pr-4 py-3 text-sm opacity-60 cursor-not-allowed shadow-inner text-muted-foreground" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground ml-1">Verified and managed securely by Clerk.</p>
                   </div>
                 </div>
 
                 <div className="h-px bg-border/50" />
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Appearance</h3>
+                  <h3 className="text-lg font-semibold mb-1">Appearance</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Customize how Nexus AI looks on your device.</p>
                   <div className="grid grid-cols-3 gap-4">
-                    <button className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5 text-primary">
-                      <Moon size={24} />
-                      <span className="text-sm font-medium">Dark</span>
+                    <button className="relative flex flex-col items-center gap-4 p-6 rounded-2xl border border-primary/30 bg-primary/10 text-primary overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />
+                      <motion.div initial={{ rotate: -15 }} animate={{ rotate: 0 }} transition={{ duration: 0.5, type: 'spring' }} className="relative z-10 p-3 rounded-full bg-primary/20 border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)] group-hover:scale-110 transition-transform">
+                        <Moon size={24} />
+                      </motion.div>
+                      <span className="relative z-10 text-sm font-semibold tracking-wide">Dark</span>
+                      <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),1)]" />
                     </button>
-                    <button className="flex flex-col items-center gap-3 p-4 rounded-xl border border-border bg-secondary/30 text-muted-foreground" disabled>
-                      <Sun size={24} />
-                      <span className="text-sm font-medium">Light</span>
+                    <button className="flex flex-col items-center gap-4 p-6 rounded-2xl border border-border/50 bg-secondary/20 text-muted-foreground cursor-not-allowed opacity-60">
+                      <div className="p-3 rounded-full bg-background border border-border/50">
+                        <Sun size={24} />
+                      </div>
+                      <span className="text-sm font-medium tracking-wide">Light</span>
                     </button>
-                    <button className="flex flex-col items-center gap-3 p-4 rounded-xl border border-border bg-secondary/30 text-muted-foreground" disabled>
-                      <Monitor size={24} />
-                      <span className="text-sm font-medium">System</span>
+                    <button className="flex flex-col items-center gap-4 p-6 rounded-2xl border border-border/50 bg-secondary/20 text-muted-foreground cursor-not-allowed opacity-60">
+                      <div className="p-3 rounded-full bg-background border border-border/50">
+                        <Monitor size={24} />
+                      </div>
+                      <span className="text-sm font-medium tracking-wide">System</span>
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3 italic">Nexus AI is currently optimized for Dark Mode only.</p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3">
-                  <Info size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-4 shadow-inner">
+                  <div className="p-2 rounded-full bg-primary/10 shrink-0">
+                    <Info size={18} className="text-primary" />
+                  </div>
                   <div className="text-sm">
-                    <p className="font-medium text-primary mb-1">AI Processing is Secure</p>
-                    <p className="text-foreground/70 text-xs">Your Gemini API key is stored securely on the server and is never exposed to the browser.</p>
+                    <p className="font-semibold text-primary mb-1">AI Processing is Secure</p>
+                    <p className="text-foreground/70 text-xs leading-relaxed">Your data parsing falls back securely to OpenRouter or Groq based on strict routing policies.</p>
                   </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Notification Preferences</h3>
-                <div className="space-y-4">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-semibold">Notification Preferences</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Control exactly what we alert you about.</p>
+                </div>
+                <div className="space-y-3">
                   {[
-                    { title: 'Email Alerts', desc: 'Receive daily summary reports via email.' },
-                    { title: 'Push Notifications', desc: 'Get instant alerts for high-risk anomalies.' },
-                    { title: 'Weekly Digest', desc: 'A weekly overview of your data insights.' },
+                    { title: 'Email Alerts', desc: 'Receive daily summary reports via email.', active: true },
+                    { title: 'Push Notifications', desc: 'Get instant alerts for high-risk anomalies.', active: false },
+                    { title: 'Weekly Digest', desc: 'A weekly overview of your data insights.', active: true },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-border bg-secondary/20">
+                    <div key={i} className="group flex items-center justify-between p-5 rounded-2xl border border-border/40 hover:border-primary/30 bg-background/30 hover:bg-secondary/20 transition-all duration-300 shadow-sm cursor-pointer">
                       <div>
-                        <h4 className="font-medium text-sm">{item.title}</h4>
+                        <h4 className="font-medium text-sm text-foreground">{item.title}</h4>
                         <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-primary rounded-full relative cursor-pointer">
-                        <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                      <div className={cn(
+                        "w-12 h-6 rounded-full flex items-center px-1 border transition-colors shadow-inner",
+                        item.active ? "bg-primary/20 border-primary/30 justify-end" : "bg-secondary border-border/50 justify-start"
+                      )}>
+                        <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 30 }} className={cn(
+                          "w-4 h-4 rounded-full shadow-md",
+                          item.active ? "bg-primary shadow-primary/40" : "bg-muted-foreground"
+                        )} />
                       </div>
                     </div>
                   ))}
@@ -153,40 +196,62 @@ export default function Settings() {
             )}
 
             {activeTab === 'security' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Security Settings</h3>
-                <p className="text-sm text-muted-foreground">
-                  Password and two-factor authentication are managed through your Clerk account.
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'data' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Data Management</h3>
-                <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/5 space-y-4">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-semibold">Security Settings</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Manage your authentication and sessions.</p>
+                </div>
+                <div className="p-6 rounded-2xl border border-border/40 bg-background/30 shadow-sm flex items-center gap-4">
+                  <div className="p-3 rounded-full bg-secondary text-muted-foreground">
+                    <Shield size={24} />
+                  </div>
                   <div>
-                    <h4 className="font-medium text-sm text-destructive">Sign Out</h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your data remains securely stored on the server.
+                    <h4 className="font-medium text-sm">Identity Management</h4>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
+                      Password, 2FA, and identity are securely managed off-site by our authentication provider Clerk.
                     </p>
                   </div>
-                  <button onClick={() => setShowConfirmModal(true)}
-                    className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors">
-                    Sign Out
-                  </button>
                 </div>
               </div>
             )}
 
-            <div className="pt-6 border-t border-border/50 flex justify-end">
+            {activeTab === 'data' && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-semibold">Data Management</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Control your active session and workspace data.</p>
+                </div>
+                <div className="p-6 rounded-2xl border border-destructive/20 bg-destructive/5 space-y-5">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-full bg-destructive/10 text-destructive shrink-0">
+                      <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm text-destructive">Sign Out of Workspace</h4>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        This will securely end your session. Your processed datasets and AI insights will remain securely encrypted on the server.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pl-16">
+                    <button onClick={() => setShowConfirmModal(true)}
+                      className="px-6 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-8 border-t border-border/40 flex justify-end">
               <button onClick={handleSaveProfile} disabled={isSaving}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-60">
+                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(var(--primary),0.3)] disabled:opacity-60 disabled:hover:scale-100">
                 <Save size={18} />
-                <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
+                <span>{isSaving ? 'Saving...' : 'Save Preferences'}</span>
               </button>
             </div>
           </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
