@@ -27,6 +27,7 @@ interface NexusState {
   isBatchProcessing: boolean;
   batchProgress: number;
   batchStatus: string;
+  batchError: string | null;
   processingDatasetId: string | null;
 
   // Actions
@@ -41,7 +42,7 @@ interface NexusState {
   clearAlerts: () => void;
   clearAll: () => void;
 
-  setBatchProcessing: (processing: boolean, progress?: number, status?: string, datasetId?: string | null) => void;
+  setBatchProcessing: (processing: boolean, progress?: number, status?: string, datasetId?: string | null, error?: string | null) => void;
 }
 
 // ── Store ──────────────────────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ export const useStore = create<NexusState>()(
       isBatchProcessing: false,
       batchProgress: 0,
       batchStatus: '',
+      batchError: null,
       processingDatasetId: null,
 
       setDatasets: (datasets) => set({ datasets }),
@@ -84,14 +86,16 @@ export const useStore = create<NexusState>()(
           alerts: [],
           isBatchProcessing: false,
           batchProgress: 0,
+          batchError: null,
           processingDatasetId: null,
         }),
 
-      setBatchProcessing: (processing, progress = 0, status = '', datasetId = null) =>
+      setBatchProcessing: (processing, progress = 0, status = '', datasetId = null, error = null) =>
         set((state) => ({
           isBatchProcessing: processing,
           batchProgress: progress,
           batchStatus: status,
+          batchError: error,
           processingDatasetId: processing ? (datasetId || state.processingDatasetId) : null,
         })),
     }),

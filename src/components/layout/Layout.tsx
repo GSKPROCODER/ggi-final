@@ -1,8 +1,6 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   BarChart3,
@@ -18,11 +16,16 @@ import {
   Database,
   Bot,
   PieChart,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import Logo from '@/components/Logo';
+import { useStore } from '@/store/useStore';
+import { datasetsApi } from '@/lib/api';
 
 const navItems = [
   { name: 'Dashboard',   path: '/dashboard',           icon: LayoutDashboard, exact: true },
@@ -47,6 +50,77 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const currentPath = pathname || '';
   const { signOut } = useClerk();
   const { user } = useUser();
+  const router = useRouter();
+
+  // Zustand background processing states
+  const {
+    isBatchProcessing,
+    batchProgress,
+    batchStatus,
+    batchError,
+    processingDatasetId,
+    setBatchProcessing,
+    setDatasets,
+  } = useStore();
+
+  const [showFloatingDone, setShowFloatingDone] = useState(false);
+  const [lastProgress, setLastProgress] = useState(0);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Global Polling Engine
+  useEffect(() => {
+    if (processingDatasetId) {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
+      pollIntervalRef.current = setInterval(async () => {
+        try {
+          const status = await datasetsApi.getStatus(processingDatasetId);
+          const statusMsg = `Analyzed ${status.processed_count} of ${status.row_count} records`;
+          
+          if (status.status === 'completed' || status.status === 'failed') {
+            clearInterval(pollIntervalRef.current!);
+            pollIntervalRef.current = null;
+            
+            if (status.status === 'failed') {
+              setBatchProcessing(false, batchProgress, status.error_message || 'Analysis failed due to an error.', null, status.error_message || 'Analysis failed due to an error.');
+            } else {
+              setBatchProcessing(false, 100, '', null, null);
+            }
+            
+            // Refresh dataset lists
+            const list = await datasetsApi.list();
+            setDatasets(list);
+          } else {
+            setBatchProcessing(true, status.percent, statusMsg, processingDatasetId, null);
+          }
+        } catch (err) {
+          console.error('Global status poll failed:', err);
+        }
+      }, 3000);
+    } else {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [processingDatasetId]);
+
+  // Floating done/error card transitions
+  useEffect(() => {
+    if (isBatchProcessing) {
+      setShowFloatingDone(false);
+      setLastProgress(batchProgress);
+    } else if ((lastProgress > 0 && lastProgress < 100) || batchError) {
+      setShowFloatingDone(true);
+      setLastProgress(0);
+      const timer = setTimeout(() => setShowFloatingDone(false), batchError ? 12000 : 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isBatchProcessing, batchProgress, lastProgress, batchError]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -221,7 +295,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </motion.aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Topbar */}
         <header className="h-14 shrink-0 flex items-center justify-between px-4 md:px-5 border-b border-border/30 bg-background/80 backdrop-blur-xl z-10">
           <div className="flex items-center gap-3 min-w-0">
@@ -251,6 +325,96 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
           {children}
         </main>
+
+        {/* Persistent background process tracker (Amazon style) */}
+        <AnimatePresence>
+          {(isBatchProcessing || showFloatingDone) && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              onClick={() => {
+                if (processingDatasetId || currentPath !== '/dashboard/upload') {
+                  router.push('/dashboard/upload');
+                }
+              }}
+              className={cn(
+                "fixed bottom-6 right-6 z-50 w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
+                "bg-[#0f172a]/90 backdrop-blur-xl shadow-2xl hover:scale-[1.02]",
+                isBatchProcessing 
+                  ? "border-primary/40 shadow-primary/10" 
+                  : batchError
+                    ? "border-destructive/40 shadow-destructive/10"
+                    : "border-emerald-500/40 shadow-emerald-500/10"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                  isBatchProcessing 
+                    ? "bg-primary/20 text-primary" 
+                    : batchError
+                      ? "bg-destructive/20 text-destructive"
+                      : "bg-emerald-500/20 text-emerald-400"
+                )}>
+                  {isBatchProcessing ? (
+                    <Loader2 size={16} className="animate-spin text-primary" />
+                  ) : batchError ? (
+                    <AlertCircle size={18} />
+                  ) : (
+                    <CheckCircle2 size={18} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn(
+                    "text-[10px] font-bold tracking-wider uppercase",
+                    batchError ? "text-destructive/80" : "text-muted-foreground"
+                  )}>
+                    {isBatchProcessing ? "Analyzing Dataset" : batchError ? "Analysis Failed" : "Analysis Complete"}
+                  </p>
+                  <p className="text-[12px] font-semibold text-foreground truncate mt-0.5">
+                    {isBatchProcessing 
+                      ? (batchStatus || "Processing records...") 
+                      : batchError 
+                        ? batchError 
+                        : "All records successfully processed!"}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isBatchProcessing) {
+                      router.push('/dashboard/upload');
+                    } else {
+                      setShowFloatingDone(false);
+                      if (batchError) setBatchProcessing(false, 0, '', null, null); // Clear error on dismiss
+                    }
+                  }}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {isBatchProcessing && (
+                <div className="mt-3.5 space-y-1.5">
+                  <div className="flex justify-between text-[11px] font-semibold text-primary">
+                    <span>Progress</span>
+                    <span>{batchProgress.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full"
+                      animate={{ width: `${batchProgress}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

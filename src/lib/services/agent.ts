@@ -1,6 +1,6 @@
 import { StateGraph, START, END, MemorySaver } from '@langchain/langgraph';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage, BaseMessage } from '@langchain/core/messages';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatOpenAI } from '@langchain/openai';
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
 
@@ -68,22 +68,39 @@ async function queryDatabase(query: string, userId: string): Promise<string> {
  * @returns Compiled executable state graph.
  */
 function createAgentGraph(userId: string) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not defined.');
+  const groqKey = process.env.GROQ_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const activeKey = groqKey || openRouterKey;
+
+  if (!activeKey) {
+    throw new Error('GROQ_API_KEY or OPENROUTER_API_KEY environment variable is required.');
   }
 
+  const useGroq = !!groqKey;
+  const modelName = useGroq ? 'llama-3.3-70b-versatile' : 'qwen/qwen3-235b-a22b:free';
+  const configuration = useGroq ? {
+    baseURL: 'https://api.groq.com/openai/v1',
+  } : {
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: {
+      'HTTP-Referer': 'https://nexus-ai.local',
+      'X-Title': 'Nexus AI',
+    },
+  };
+
   // Model setup
-  const model = new ChatGoogleGenerativeAI({
-    model: 'gemini-3.1-flash-lite',
-    apiKey,
+  const model = new ChatOpenAI({
+    modelName,
+    apiKey: activeKey,
     temperature: 0.1,
+    configuration,
   });
 
-  const evaluatorModel = new ChatGoogleGenerativeAI({
-    model: 'gemini-3.1-flash-lite',
-    apiKey,
+  const evaluatorModel = new ChatOpenAI({
+    modelName,
+    apiKey: activeKey,
     temperature: 0.0,
+    configuration,
   });
 
   // System instructions explaining roles and schema tables

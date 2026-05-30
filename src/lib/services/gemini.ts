@@ -1,15 +1,123 @@
-import { GoogleGenAI } from '@google/genai';
+/**
+ * AI services using API Stacking (Groq -> Gemini -> OpenRouter fallback)
+ */
 
-// Initialize the Google AI client using the configured environment variable
-const getGenAIClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not defined.');
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_MODEL = 'gemini-2.0-flash';
+const OPENROUTER_MODEL = 'qwen/qwen3-235b-a22b:free';
+
+async function fetchFromProvider(
+  url: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  temperature: number,
+  jsonMode: boolean,
+  extraHeaders: Record<string, string> = {}
+): Promise<string> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      ...extraHeaders,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature,
+      response_format: jsonMode ? { type: 'json_object' } : undefined,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`API Error (${response.status}): ${errText}`);
   }
-  return new GoogleGenAI({ apiKey });
-};
 
-const NEXUS_MODEL = 'gemini-3.1-flash-lite';
+  const data = await response.json();
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error('API returned an empty or invalid response format.');
+  }
+
+  return data.choices[0].message.content || '';
+}
+
+async function generateAIContent(prompt: string, jsonMode = false, temperature = 0.3): Promise<string> {
+  const groqKey = process.env.GROQ_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+
+  let lastError: Error | null = null;
+
+  // 1. Groq — fastest, most generous free tier
+  if (groqKey) {
+    try {
+      return await fetchFromProvider(
+        'https://api.groq.com/openai/v1/chat/completions',
+        groqKey,
+        GROQ_MODEL,
+        prompt,
+        temperature,
+        jsonMode
+      );
+    } catch (err: any) {
+      console.warn('Groq failed, trying Gemini...', err.message);
+      lastError = err;
+    }
+  }
+
+  // 2. Gemini Flash — 1500 req/day free, very fast
+  if (geminiKey) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature,
+              responseMimeType: jsonMode ? 'application/json' : 'text/plain',
+            },
+          }),
+        }
+      );
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini API Error (${response.status}): ${errText}`);
+      }
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Gemini returned empty response.');
+      return text;
+    } catch (err: any) {
+      console.warn('Gemini failed, trying OpenRouter...', err.message);
+      lastError = err;
+    }
+  }
+
+  // 3. OpenRouter — last resort (shared free pool, often rate-limited)
+  if (openRouterKey) {
+    try {
+      return await fetchFromProvider(
+        'https://openrouter.ai/api/v1/chat/completions',
+        openRouterKey,
+        OPENROUTER_MODEL,
+        prompt,
+        temperature,
+        jsonMode,
+        { 'HTTP-Referer': 'https://nexus-ai.local', 'X-Title': 'Nexus AI' }
+      );
+    } catch (err: any) {
+      console.warn('OpenRouter failed.', err.message);
+      lastError = err;
+    }
+  }
+
+  throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'No API keys configured.'}`);
+}
 
 /**
  * Strips markdown code blocks (e.g. ```json ... ```) from a text response
@@ -22,17 +130,12 @@ function parseJsonResponse<T>(text: string): T {
   try {
     return JSON.parse(jsonString) as T;
   } catch {
-    throw new Error(`Gemini returned invalid JSON. Raw: ${jsonString.slice(0, 200)}`);
+    throw new Error(`AI returned invalid JSON. Raw: ${jsonString.slice(0, 200)}`);
   }
 }
 
 /**
  * Performs AI-driven text analysis on a single document or feedback entry.
- * Generates an executive summary, sentiment estimation, risk classification,
- * structural issues, and actionable recommendations.
- * 
- * @param text The raw string content of the user comment or data record to analyze.
- * @returns A structured promise resolving to sentiment, summary, risk score, and issues.
  */
 export async function analyzeText(text: string): Promise<{
   summary: string;
@@ -43,7 +146,6 @@ export async function analyzeText(text: string): Promise<{
   recommendations: string[];
   confidence_score: number;
 }> {
-  const ai = getGenAIClient();
   const prompt = `Analyze the following text and return a JSON object with EXACTLY these fields:
 {
   "summary": "concise 1-2 sentence summary",
@@ -60,29 +162,12 @@ Text to analyze:
 
 Return ONLY valid JSON, no markdown, no explanation.`;
 
-  const response = await ai.models.generateContent({
-    model: NEXUS_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      temperature: 0.3,
-    },
-  });
-
-  if (!response.text) {
-    throw new Error('Gemini API returned an empty response.');
-  }
-
-  return parseJsonResponse(response.text);
+  const responseText = await generateAIContent(prompt, true, 0.3);
+  return parseJsonResponse(responseText);
 }
 
 /**
  * Generates aggregated semantic insights from a larger batch of text inputs.
- * Condenses trends, calculates emotional and sentiment distributions,
- * and highlights key concerns to produce a macro-level overview.
- * 
- * @param texts Array of string records representing dataset feedback rows.
- * @returns An executive batch insights summary object.
  */
 export async function generateBatchInsights(texts: string[]): Promise<{
   trends: string[];
@@ -94,7 +179,6 @@ export async function generateBatchInsights(texts: string[]): Promise<{
   risk_level: 'Low' | 'Medium' | 'High';
   top_keywords: string[];
 }> {
-  const ai = getGenAIClient();
   const sample = texts.slice(0, 80);
   const joined = sample.map((t) => t.slice(0, 500)).join('\n---\n');
 
@@ -119,37 +203,18 @@ ${joined}
 
 Return ONLY valid JSON.`;
 
-  const response = await ai.models.generateContent({
-    model: NEXUS_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      temperature: 0.2,
-    },
-  });
-
-  if (!response.text) {
-    throw new Error('Gemini API returned an empty response.');
-  }
-
-  return parseJsonResponse(response.text);
+  const responseText = await generateAIContent(prompt, true, 0.2);
+  return parseJsonResponse(responseText);
 }
 
 /**
  * Conducts a contextual conversational analysis over user query and dataset sample.
- * Grounding the model context strictly to user records to prevent hallucinations.
- * 
- * @param query The question or analytical command sent by the user.
- * @param contextData Batch statistics and sample data injected for accuracy.
- * @param history Previous chat history logs.
- * @returns Plain text conversational response.
  */
 export async function chatWithData(
   query: string,
   contextData: any,
   history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>
 ): Promise<string> {
-  const ai = getGenAIClient();
   const contextStr = JSON.stringify(contextData, null, 2).slice(0, 6000);
 
   const historyStr = history.length > 0
@@ -168,24 +233,11 @@ ${historyStr}User question: ${query}
 
 Provide a clear, insightful answer (2-4 sentences). Use bullet points for lists.`;
 
-  const response = await ai.models.generateContent({
-    model: NEXUS_MODEL,
-    contents: prompt,
-    config: {
-      temperature: 0.4,
-    },
-  });
-
-  return response.text || 'Unable to analyze the context details.';
+  return generateAIContent(prompt, false, 0.4);
 }
 
 /**
  * Creates a structured executive intelligence report with high-fidelity insights
- * and metrics suitable for management presentations.
- * 
- * @param title The customized business title of the report.
- * @param contextData Data metrics and trends from the dataset.
- * @returns Structured sections including trend analysis, risks, and findings.
  */
 export async function generateReport(
   title: string,
@@ -198,7 +250,6 @@ export async function generateReport(
   recommendations: string[];
   metrics: Array<{ label: string; value: string }>;
 }> {
-  const ai = getGenAIClient();
   const contextStr = JSON.stringify(contextData, null, 2).slice(0, 5000);
 
   const prompt = `You are an expert business intelligence analyst at Nexus AI.
@@ -223,35 +274,18 @@ ${contextStr}
 
 Return ONLY valid JSON. Be specific and data-driven in your analysis.`;
 
-  const response = await ai.models.generateContent({
-    model: NEXUS_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      temperature: 0.3,
-    },
-  });
-
-  if (!response.text) {
-    throw new Error('Gemini API returned an empty response.');
-  }
-
-  return parseJsonResponse(response.text);
+  const responseText = await generateAIContent(prompt, true, 0.3);
+  return parseJsonResponse(responseText);
 }
 
 /**
  * Scans a dataset context to flag anomalies, critical spikes, and potential risks.
- * Generates warning indicators to feed directly into the system alerts dashboard.
- * 
- * @param contextData Summary analytics and keywords extracted from datasets.
- * @returns Array of system-level alerts with titles, details, and severities.
  */
 export async function scanForAnomalies(contextData: any): Promise<Array<{
   title: string;
   message: string;
   severity: 'low' | 'medium' | 'high';
 }>> {
-  const ai = getGenAIClient();
   const contextStr = JSON.stringify(contextData, null, 2).slice(0, 4000);
 
   const prompt = `You are a risk detection AI for Nexus AI. Analyze the data for anomalies.
@@ -274,19 +308,7 @@ ${contextStr}
 
 Return ONLY a valid JSON array. Generate exactly 3-5 alerts.`;
 
-  const response = await ai.models.generateContent({
-    model: NEXUS_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      temperature: 0.3,
-    },
-  });
-
-  if (!response.text) {
-    throw new Error('Gemini API returned an empty response.');
-  }
-
-  const result = parseJsonResponse<any>(response.text);
+  const responseText = await generateAIContent(prompt, true, 0.3);
+  const result = parseJsonResponse<any>(responseText);
   return Array.isArray(result) ? result : (result.alerts || []);
 }

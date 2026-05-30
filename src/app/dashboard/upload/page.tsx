@@ -4,13 +4,14 @@ import { useState, useCallback, useRef, useEffect, type DragEvent } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Upload, FileText, CheckCircle2, AlertCircle, ChevronRight,
-  Table2, ArrowRight, Loader2, X, BarChart3, Columns
+  ArrowRight, Loader2, X, Columns
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { datasetsApi } from '@/lib/api';
 import type { DatasetDetailResponse } from '@/lib/api';
 import { useStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Step = 'upload' | 'columns' | 'process' | 'done';
 
@@ -21,14 +22,21 @@ export default function UploadData() {
   const [dataset, setDataset] = useState<DatasetDetailResponse | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [processingStatus, setProcessingStatus] = useState('');
   const [error, setError] = useState('');
   const [processingTime, setProcessingTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
-  const { setDatasets, setBatchProcessing, isBatchProcessing, processingDatasetId } = useStore();
+
+  const {
+    setDatasets,
+    setBatchProcessing,
+    isBatchProcessing,
+    batchProgress,
+    batchStatus,
+    batchError,
+    processingDatasetId,
+    datasets,
+  } = useStore();
 
   const STEPS: { id: Step; label: string }[] = [
     { id: 'upload', label: 'Upload' },
@@ -36,6 +44,13 @@ export default function UploadData() {
     { id: 'process', label: 'Process' },
     { id: 'done', label: 'Complete' },
   ];
+
+  // Load datasets on mount if empty (for the Recent Uploads panel)
+  useEffect(() => {
+    if (datasets.length === 0) {
+      datasetsApi.list().then(setDatasets).catch(console.error);
+    }
+  }, []);
 
   const handleFile = useCallback(async (f: File) => {
     const fn = f.name.toLowerCase();
@@ -63,6 +78,29 @@ export default function UploadData() {
     }
   }, []);
 
+  const useSampleDataset = () => {
+    const sampleCsv = `Feedback,Customer_Rating,Urgency_Level
+Great customer support and extremely fast turnaround! Highly recommended.,5,Low
+The server crashed twice today and we lost all customer transaction data. This is a disaster!,1,High
+I received the package but it was slightly damaged on the side. The product inside works fine though.,3,Medium
+I love the new dark mode design! It looks incredibly premium and is so easy on the eyes.,5,Low
+The payment page keeps throwing a 500 error when I try to complete the checkout. Please fix it!,1,High
+Great value for money. Will definitely buy again.,4,Low
+`;
+    const blob = new Blob([sampleCsv], { type: 'text/csv' });
+    const sampleFile = new File([blob], 'nexus_ai_demo_feedback.csv', { type: 'text/csv' });
+    handleFile(sampleFile);
+  };
+
+  const handleCancel = () => {
+    if (confirm('Are you sure you want to cancel the analysis? Active background tasks will be aborted.')) {
+      setBatchProcessing(false, 0, '', null);
+      setStep('upload');
+      setFile(null);
+      setDataset(null);
+    }
+  };
+
   const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -70,73 +108,61 @@ export default function UploadData() {
     if (f) handleFile(f);
   }, [handleFile]);
 
-  const startPolling = (dsId: string, startTime: number) => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      try {
-        const status = await datasetsApi.getStatus(dsId);
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        setProcessingTime(elapsed);
-        setProgress(status.percent);
-        const statusMsg = `Analyzed ${status.processed_count} of ${status.row_count} records`;
-        setProcessingStatus(statusMsg);
-        setBatchProcessing(true, status.percent, statusMsg, dsId);
-
-        if (status.status === 'completed' || status.status === 'failed') {
-          clearInterval(pollRef.current!);
-          setBatchProcessing(false, 100, '');
-          if (status.status === 'completed') {
-            const datasets = await datasetsApi.list();
-            setDatasets(datasets);
-            setStep('done');
-          } else {
-            setError(status.error_message || 'Processing failed.');
-            setStep('columns');
-          }
-        }
-      } catch (err) {
-        clearInterval(pollRef.current!);
-        setBatchProcessing(false, 0, '');
-        setError(err instanceof Error ? err.message : 'Lost connection during processing.');
-        setStep('columns');
-      }
-    }, 2000);
-  };
-
   const startProcessing = async () => {
     if (!dataset || selectedColumns.length === 0) return;
     setStep('process');
-    const startTime = Date.now();
+    setProcessingTime(0);
     setBatchProcessing(true, 0, 'Starting...', dataset.id);
 
     try {
       await datasetsApi.process(dataset.id, selectedColumns.join(', '));
-      startPolling(dataset.id, startTime);
+      // Handled globally by the Layout.tsx polling engine!
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start processing.');
-      setStep('columns');
+      setBatchProcessing(false, 0, '', null, err instanceof Error ? err.message : 'Failed to start processing.');
+      // Keep on the process step so the error shows in the analysis UI, or go back to columns
     }
   };
 
+  // Keep track of processing time locally
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isBatchProcessing) {
+      timer = setInterval(() => {
+        setProcessingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setProcessingTime(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isBatchProcessing]);
+
   useEffect(() => {
     if (isBatchProcessing && processingDatasetId) {
-      // Resume state
       setStep('process');
       datasetsApi.getById(processingDatasetId).then(detail => {
         setDataset(detail);
-        startPolling(processingDatasetId, Date.now() - 5000); // Approximate resume time
       }).catch(console.error);
     }
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
+  }, [isBatchProcessing, processingDatasetId]);
 
   // ── Step Renderers ────────────────────────────────────────────────────────
 
   const renderUpload = () => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-1">Upload Your Dataset</h2>
-        <p className="text-muted-foreground">Upload a CSV or Excel (.xlsx) file containing your text data. Up to 50,000 rows supported.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold mb-1">Upload Your Dataset</h2>
+          <p className="text-muted-foreground">Upload a CSV or Excel (.xlsx) file containing your text data. Up to 50,000 rows supported.</p>
+        </div>
+        <button
+          onClick={useSampleDataset}
+          className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-all hover:scale-[1.01]"
+        >
+          ✨ Use Demo Dataset
+        </button>
       </div>
 
       {error && (
@@ -187,7 +213,7 @@ export default function UploadData() {
 
       {/* Example datasets hint */}
       <div className="glass-card p-4 rounded-xl border border-border/40">
-        <p className="text-sm font-medium mb-2 text-muted-foreground">💡 Works great with:</p>
+        <p className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wider">💡 Works great with:</p>
         <div className="flex flex-wrap gap-2">
           {['Customer reviews', 'Social media posts', 'Support tickets', 'Survey responses', 'Product feedback', 'Employee feedback'].map(t => (
             <span key={t} className="text-xs px-3 py-1 bg-secondary/60 rounded-full border border-border/30">{t}</span>
@@ -199,12 +225,29 @@ export default function UploadData() {
 
   const renderColumnMapping = () => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-1">Select Text Columns</h2>
-        <p className="text-muted-foreground">
-          Choose one or more columns that contain the text you want to analyze.
-          <span className="text-primary font-medium"> {dataset?.original_filename}</span> has {dataset?.row_count?.toLocaleString()} rows and {dataset?.columns.length} columns.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold mb-1">Select Text Columns</h2>
+          <p className="text-muted-foreground">
+            Choose one or more columns that contain the text you want to analyze.
+            <span className="text-primary font-medium"> {dataset?.original_filename}</span> has {dataset?.row_count?.toLocaleString()} rows and {dataset?.columns.length} columns.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSelectedColumns(dataset?.columns || [])}
+            className="text-[10px] uppercase font-bold tracking-wider text-primary hover:underline"
+          >
+            Select All
+          </button>
+          <span className="text-border">|</span>
+          <button
+            onClick={() => setSelectedColumns([])}
+            className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground hover:underline"
+          >
+            Clear All
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3">
@@ -255,22 +298,47 @@ export default function UploadData() {
   const renderProcessing = () => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 py-8">
       <div className="text-center">
-        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-          <Loader2 size={36} className="text-primary animate-spin" />
+        <div className={cn(
+          "w-20 h-20 rounded-full border flex items-center justify-center mx-auto mb-6",
+          batchError ? "bg-destructive/10 border-destructive/20 text-destructive" : "bg-primary/10 border-primary/20 text-primary"
+        )}>
+          {batchError ? (
+            <AlertCircle size={36} />
+          ) : (
+            <Loader2 size={36} className="animate-spin" />
+          )}
         </div>
-        <h2 className="text-2xl font-semibold mb-2">Analyzing Your Dataset</h2>
-        <p className="text-muted-foreground">Gemini is processing your records. This may take a few minutes for large datasets.</p>
+        <h2 className="text-2xl font-semibold mb-2">
+          {batchError ? "Analysis Failed" : "Analyzing Your Dataset"}
+        </h2>
+        <p className="text-muted-foreground">
+          {batchError 
+            ? batchError 
+            : "AI is processing your records. This may take a few minutes for large datasets."}
+        </p>
       </div>
 
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">{processingStatus || 'Initializing...'}</span>
-          <span className="font-semibold text-primary">{progress.toFixed(0)}%</span>
+          <span className={cn(
+            batchError ? "text-destructive/80 font-medium" : "text-muted-foreground"
+          )}>
+            {batchError ? "Process Halted" : (batchStatus || 'Initializing...')}
+          </span>
+          <span className={cn(
+            "font-semibold",
+            batchError ? "text-destructive" : "text-primary"
+          )}>
+            {batchProgress.toFixed(0)}%
+          </span>
         </div>
         <div className="h-3 bg-secondary rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full"
-            animate={{ width: `${progress}%` }}
+            className={cn(
+              "h-full rounded-full",
+              batchError ? "bg-destructive/60" : "bg-gradient-to-r from-primary to-blue-500"
+            )}
+            animate={{ width: `${batchProgress}%` }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         </div>
@@ -291,6 +359,30 @@ export default function UploadData() {
             <p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-center gap-3 pt-4">
+        <button
+          onClick={handleCancel}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-destructive/20 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all hover:scale-[1.01]"
+        >
+          <X size={14} /> {batchError ? "Reset" : "Cancel Analysis"}
+        </button>
+        {batchError ? (
+          <button
+            onClick={startProcessing}
+            className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.01]"
+          >
+            Try Again <ArrowRight size={16} />
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-border/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all hover:scale-[1.01]"
+          >
+            Minimize to Background <ArrowRight size={14} />
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -334,8 +426,10 @@ export default function UploadData() {
     </motion.div>
   );
 
+  const recentDatasets = datasets.slice(0, 3);
+
   return (
-    <div className="p-5 md:p-6 space-y-8 max-w-3xl mx-auto pb-10">
+    <div className="p-5 md:p-6 space-y-8 max-w-3xl mx-auto pb-16">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -382,6 +476,55 @@ export default function UploadData() {
           {step === 'done' && renderDone()}
         </div>
       </AnimatePresence>
+
+      {/* QoL Recent Activity Panel (only shown on upload step for clean UI) */}
+      {step === 'upload' && recentDatasets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4 pt-6 border-t border-border/40"
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">📊 Recent Uploads</h3>
+            <Link href="/dashboard/history" className="text-xs font-semibold text-primary hover:underline">
+              View History
+            </Link>
+          </div>
+          <div className="grid gap-3">
+            {recentDatasets.map((ds) => (
+              <div
+                key={ds.id}
+                onClick={() => router.push('/dashboard/history')}
+                className="flex items-center justify-between p-3.5 rounded-xl border border-border/30 hover:border-primary/20 bg-card/40 hover:bg-secondary/20 cursor-pointer transition-all duration-200"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
+                    <FileText size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{ds.original_filename}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {ds.row_count.toLocaleString()} rows · {new Date(ds.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                    ds.status === 'completed' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : ds.status === 'processing' ? "bg-primary/10 text-primary border-primary/20 animate-pulse"
+                        : ds.status === 'failed' ? "bg-destructive/10 text-destructive border-destructive/20"
+                          : "bg-secondary text-muted-foreground border-border/30"
+                  )}>
+                    {ds.status}
+                  </span>
+                  <ChevronRight size={14} className="text-muted-foreground" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

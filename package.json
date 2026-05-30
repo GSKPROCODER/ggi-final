@@ -11,10 +11,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.1",
-    "@google/genai": "^1.29.0",
     "@langchain/core": "^1.1.48",
-    "@langchain/google-genai": "^2.1.31",
     "@langchain/langgraph": "^1.3.2",
+    "@langchain/openai": "^1.4.7",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
