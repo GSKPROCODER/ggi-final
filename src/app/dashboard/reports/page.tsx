@@ -135,7 +135,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <FileText size={20} />
             </div>

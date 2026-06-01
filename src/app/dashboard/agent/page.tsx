@@ -59,44 +59,42 @@ export default function AgentChat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] w-full py-6 px-5 md:px-6 animate-in fade-in zoom-in-95 duration-500">
-      
-      {/* Header */}
-      <div className="flex flex-col gap-1 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-            <Sparkles size={24} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
-              Nexus Agent
-            </h1>
-            <p className="text-muted-foreground text-sm font-medium">Autonomous Database Researcher & Self-Critical Synthesizer</p>
-          </div>
+    <div
+      className="flex flex-col w-full px-3 py-3 md:px-6 md:py-6 animate-in fade-in zoom-in-95 duration-500"
+      style={{ height: 'calc(100svh - 3.5rem - 3.5rem)', maxHeight: 'calc(100svh - 3.5rem - 3.5rem)' }}
+    >
+      {/* Header — compact on mobile, full on desktop */}
+      <div className="flex items-center gap-2.5 mb-3 md:mb-5 shrink-0">
+        <div className="p-2 md:p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+          <Sparkles size={18} className="md:w-6 md:h-6" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white leading-tight">Nexus Agent</h1>
+          <p className="text-muted-foreground text-xs md:text-sm hidden sm:block">Autonomous Database Researcher & Self-Critical Synthesizer</p>
         </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 glass-card rounded-2xl border border-border/40 overflow-hidden flex flex-col relative shadow-2xl">
-        
+      <div className="flex-1 glass-card rounded-2xl border border-border/40 overflow-hidden flex flex-col relative shadow-2xl min-h-0">
+
         {messages.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 pointer-events-none">
-            <Bot size={48} className="text-muted-foreground/30 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">How can I assist your analysis?</h3>
-            <p className="text-muted-foreground text-sm max-w-sm">
-              I have direct SQL read-access to your dataset records. Ask me to find trends, summarize negative feedback, or discover the correlation between risk levels and emotion.
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-8 pointer-events-none">
+            <Bot size={40} className="text-muted-foreground/30 mb-3 md:mb-4" />
+            <h3 className="text-lg md:text-xl font-semibold mb-2">How can I assist your analysis?</h3>
+            <p className="text-muted-foreground text-sm max-w-xs">
+              I have direct SQL access to your records. Ask me to find trends, summarize feedback, or compare risk levels.
             </p>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-5 md:space-y-8 scroll-smooth scroll-touch">
           <AnimatePresence>
             {messages.map((m, idx) => (
               <motion.div
                 key={idx}
                 initial={reduce ? false : { opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={cn('flex gap-4 max-w-[85%]', m.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto')}
+                className={cn('flex gap-2 md:gap-4 max-w-[90%] md:max-w-[85%]', m.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto')}
               >
                 <div className={cn(
                   'w-10 h-10 rounded-full flex items-center justify-center shrink-0 border relative z-10',
@@ -152,8 +150,8 @@ export default function AgentChat() {
         </div>
 
         {/* Input Form */}
-        <div className="p-4 bg-background/50 border-t border-border/40 backdrop-blur-xl">
-          <form onSubmit={handleSubmit} className="flex items-end gap-3 max-w-4xl mx-auto">
+        <div className="p-3 md:p-4 bg-background/50 border-t border-border/40 backdrop-blur-xl shrink-0">
+          <form onSubmit={handleSubmit} className="flex items-end gap-2 md:gap-3 max-w-4xl mx-auto">
              <div className="flex-1 bg-secondary/50 border border-border/60 hover:border-primary/40 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all rounded-2xl overflow-hidden shadow-inner">
                <textarea
                  value={input}

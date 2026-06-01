@@ -120,7 +120,7 @@ export default function Alerts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-400">
               <Bell size={20} />
             </div>

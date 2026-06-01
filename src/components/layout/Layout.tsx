@@ -218,15 +218,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         initial={false}
         animate={{
           width: isMobile ? SIDEBAR_W : (isSidebarOpen ? SIDEBAR_W : COLLAPSED_W),
-          x: isMobile ? (isSidebarOpen ? 0 : -SIDEBAR_W) : 0,
+          x: isMobile ? (isSidebarOpen ? 0 : -(SIDEBAR_W + 40)) : 0,
         }}
         transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 32 }}
         className={cn(
-          'h-[calc(100vh-2rem)] my-4 ml-4 flex flex-col shrink-0 z-30 overflow-visible relative',
-          'rounded-[32px] border border-glass-border bg-glass shadow-soft',
-          isMobile ? 'fixed top-0 left-0' : 'relative'
+          'flex flex-col shrink-0 z-30 overflow-hidden',
+          'border border-glass-border bg-glass',
+          isMobile
+            ? 'fixed top-0 left-0 h-screen rounded-r-[28px] rounded-l-none shadow-2xl'
+            : 'relative h-[calc(100vh-2rem)] my-4 ml-4 rounded-[32px] shadow-soft'
         )}
-        style={{ minWidth: isMobile ? SIDEBAR_W : (isSidebarOpen ? SIDEBAR_W : COLLAPSED_W) }}
+        style={{
+          minWidth: isMobile ? SIDEBAR_W : (isSidebarOpen ? SIDEBAR_W : COLLAPSED_W),
+          // Kill shadow bleed when fully off-screen so it doesn't show on the left edge
+          boxShadow: isMobile && !isSidebarOpen ? 'none' : undefined,
+        }}
       >
         {/* Logo row (No border bottom, bold text instead of logo icon) */}
         <div className="pt-6 pb-4 px-6 flex items-center justify-between shrink-0">
@@ -386,7 +392,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-14 md:pb-0 scroll-touch">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-14 md:pb-0 scroll-touch min-h-0">
           {children}
         </main>
 

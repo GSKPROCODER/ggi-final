@@ -127,7 +127,7 @@ export default function ManageHistory() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1 z-10 relative">
           <div aria-hidden className="absolute top-0 left-0 -translate-x-4 -translate-y-4 w-24 h-24 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
             <Database className="text-primary" size={28} aria-hidden />
             Data Management
           </h1>
