@@ -58,25 +58,45 @@ export default function AgentChat() {
     }
   };
 
+  const suggestions = [
+    'What is the overall sentiment?',
+    'Show top 5 highest risk records',
+    'What emotions appear most often?',
+    'Summarize negative feedback trends',
+  ];
+
   return (
     <div
-      className="flex flex-col w-full p-3 md:p-4 animate-in fade-in zoom-in-95 duration-500"
+      className="flex flex-col w-full animate-in fade-in zoom-in-95 duration-500"
       style={{ height: 'calc(100svh - 3.5rem - 3.5rem)', maxHeight: 'calc(100svh - 3.5rem - 3.5rem)' }}
     >
-      {/* Chat Area — fills all available space */}
-      <div className="flex-1 glass-card rounded-2xl border border-border/40 overflow-hidden flex flex-col relative shadow-2xl min-h-0">
+      {/* Chat Area — fills all available space, edge-to-edge like Gemini/Claude */}
+      <div className="flex-1 bg-card/30 overflow-hidden flex flex-col relative min-h-0">
 
         {messages.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-8 pointer-events-none">
-            <Bot size={40} className="text-muted-foreground/30 mb-3 md:mb-4" />
-            <h3 className="text-lg md:text-xl font-semibold mb-2">How can I assist your analysis?</h3>
-            <p className="text-muted-foreground text-sm max-w-xs">
-              I have direct SQL access to your records. Ask me to find trends, summarize feedback, or compare risk levels.
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pb-24 pointer-events-none">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center mb-4">
+              <Bot size={28} className="text-indigo-400" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-semibold mb-2">How can I help?</h3>
+            <p className="text-muted-foreground text-sm max-w-sm mb-6">
+              I have live SQL access to your dataset. Ask me anything about your records.
             </p>
+            <div className="flex flex-wrap gap-2 justify-center pointer-events-auto">
+              {suggestions.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { setInput(s); }}
+                  className="px-3 py-1.5 rounded-full border border-border/60 bg-secondary/50 hover:bg-secondary hover:border-primary/40 text-sm text-muted-foreground hover:text-foreground transition-all"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-5 md:space-y-8 scroll-smooth scroll-touch">
+        <div className="flex-1 overflow-y-auto px-3 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 scroll-smooth scroll-touch">
           <AnimatePresence>
             {messages.map((m, idx) => (
               <motion.div
@@ -139,8 +159,8 @@ export default function AgentChat() {
         </div>
 
         {/* Input Form */}
-        <div className="p-3 md:p-4 bg-background/50 border-t border-border/40 backdrop-blur-xl shrink-0">
-          <form onSubmit={handleSubmit} className="flex items-end gap-2 md:gap-3 max-w-4xl mx-auto">
+        <div className="px-3 py-3 md:px-6 md:py-4 border-t border-border/30 bg-card/60 backdrop-blur-xl shrink-0">
+          <form onSubmit={handleSubmit} className="flex items-end gap-2 md:gap-3 max-w-3xl mx-auto">
              <div className="flex-1 bg-secondary/50 border border-border/60 hover:border-primary/40 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all rounded-2xl overflow-hidden shadow-inner">
                <textarea
                  value={input}
