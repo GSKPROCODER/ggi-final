@@ -21,7 +21,7 @@ function KpiCardImpl({ title, value, sub, icon: Icon, trend, color }: KpiCardPro
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-5 rounded-2xl border border-border/50 hover:border-primary/30 transition-all"
+      className="glass-card glass-card-interactive p-5 rounded-2xl border border-border/50"
     >
       <div className="flex items-start justify-between mb-4">
         <div

@@ -17,6 +17,7 @@ function ConfidenceBarImpl({ score, showLabel = true, className }: ConfidenceBar
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label="Confidence score"
+      title={`${value.toFixed(0)}% confidence`}
     >
       <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
         <div
