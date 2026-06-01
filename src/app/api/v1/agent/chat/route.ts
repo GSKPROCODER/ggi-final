@@ -18,10 +18,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: 'Messages array is required.' }, { status: 400 });
     }
 
-    const threadId = `thread_${userId}`;
-
-    // Run the LangGraph execution flow
-    const [finalMessage, logs] = await runChat(messages, userId, threadId);
+    const [finalMessage, logs] = await runChat(messages, userId);
 
     return NextResponse.json({
       message: finalMessage,
