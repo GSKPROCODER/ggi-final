@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { handleApiError } from '@/lib/errors';
+import { handleApiError, isTableMissingError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
@@ -48,6 +48,13 @@ export async function GET(req: Request) {
       emotion_distribution: emotionDist,
     });
   } catch (err) {
+    if (isTableMissingError(err)) return NextResponse.json({
+      total_records: 0,
+      avg_confidence: 0,
+      sentiment_distribution: { Positive: 0, Neutral: 0, Negative: 0 },
+      risk_distribution: { Low: 0, Medium: 0, High: 0 },
+      emotion_distribution: {},
+    });
     return handleApiError(err);
   }
 }

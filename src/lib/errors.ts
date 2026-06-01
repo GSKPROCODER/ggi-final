@@ -37,6 +37,17 @@ export class NotFoundError extends ApiError {
   }
 }
 
+/** Returns true when the error is a PostgreSQL "table does not exist" (code 42P01). */
+export function isTableMissingError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  return (
+    err.message.includes('relation') ||
+    err.message.includes('does not exist') ||
+    err.message.includes('Failed query') ||
+    err.message.includes('42P01')
+  );
+}
+
 function sanitizeDbError(message: string): string {
   if (
     message.includes('Failed query') ||

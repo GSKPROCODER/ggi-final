@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from 'next/server';
-import { handleApiError } from '@/lib/errors';
+import { handleApiError, isTableMissingError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
@@ -62,6 +62,7 @@ export async function GET(req: Request) {
       offset,
     });
   } catch (err) {
+    if (isTableMissingError(err)) return NextResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
     return handleApiError(err);
   }
 }
