@@ -8,7 +8,6 @@ coverage/
 !.env.example
 .next/
 nexus-uploads/
-nexus-runner/target/
 
 .vercel
 
