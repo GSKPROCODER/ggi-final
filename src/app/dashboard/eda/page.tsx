@@ -173,19 +173,7 @@ const EDA: React.FC = () => {
 
   return (
     <div className="w-full space-y-8 pb-12 p-5 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2 mb-2 text-indigo-400 text-[10px] font-bold uppercase tracking-[0.3em]">
-            <Sparkles size={12} />
-            Data Intelligence
-          </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">EDA & Insights</h1>
-          <p className="text-slate-400 mt-2 max-w-2xl text-sm leading-relaxed">
-            Exploratory analysis of latent patterns, sentiment distributions, and risk heatmaps.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-end gap-3">
           <div className="flex items-center gap-2 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 focus-within:border-indigo-500/50 transition-all">
             <Filter size={14} className="text-slate-500" />
             <select 
@@ -198,13 +186,12 @@ const EDA: React.FC = () => {
               ))}
             </select>
           </div>
-          <button 
+          <button
             onClick={loadInitialData}
             className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg active:scale-95"
           >
             <RefreshCw size={16} />
           </button>
-        </div>
       </div>
 
       {/* Overview Stats */}

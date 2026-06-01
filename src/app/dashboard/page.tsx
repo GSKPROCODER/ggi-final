@@ -365,21 +365,24 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="glass-card rounded-2xl border border-border/50 p-6 flex flex-col justify-between">
+      </div>
+
+      <div className="glass-card rounded-2xl border border-border/50 p-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold mb-1">Risk Level Distribution</h3>
-            <p className="text-xs text-muted-foreground mb-6">Aggregated from active records</p>
+            <h3 className="font-semibold">Risk Level Distribution</h3>
+            <p className="text-xs text-muted-foreground">Aggregated from active records</p>
           </div>
-          {isChartLoading ? (
-            <div className="h-48 skeleton rounded-xl" />
-          ) : totalRecords > 0 ? (
-            <RiskBarChart data={riskData} />
-          ) : (
-            <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-              No structural risk data
-            </div>
-          )}
         </div>
+        {isChartLoading ? (
+          <div className="h-48 skeleton rounded-xl" />
+        ) : totalRecords > 0 ? (
+          <RiskBarChart data={riskData} />
+        ) : (
+          <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+            No structural risk data
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

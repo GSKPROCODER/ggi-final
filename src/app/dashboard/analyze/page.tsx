@@ -105,7 +105,7 @@ export default function Analyze() {
   };
 
   return (
-    <div className="p-5 md:p-8 space-y-6 w-full pb-10">
+    <div className="p-4 md:p-6 space-y-5 w-full pb-10">
       <div className="flex items-center justify-end flex-wrap gap-3">
         <button
           onClick={() => setShowHistory(!showHistory)}
