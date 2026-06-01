@@ -44,15 +44,6 @@ export default function Page() {
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-blue-500/10 rounded-[100%] blur-[100px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8 border border-primary/20"
-          >
-            <Logo className="w-4 h-4" />
-            <span>Introducing Nexus AI 2.0</span>
-          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
