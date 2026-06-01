@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Bot, Send, User, ChevronDown, ChevronRight, Sparkles, Loader2, KeySquare } from 'lucide-react';
+import { Bot, Send, User, ChevronDown, ChevronRight, Loader2, KeySquare } from 'lucide-react';
 import { agentApi, type AgentMessage, type AgentLog } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -60,21 +60,10 @@ export default function AgentChat() {
 
   return (
     <div
-      className="flex flex-col w-full px-3 py-3 md:px-6 md:py-6 animate-in fade-in zoom-in-95 duration-500"
+      className="flex flex-col w-full p-3 md:p-4 animate-in fade-in zoom-in-95 duration-500"
       style={{ height: 'calc(100svh - 3.5rem - 3.5rem)', maxHeight: 'calc(100svh - 3.5rem - 3.5rem)' }}
     >
-      {/* Header — compact on mobile, full on desktop */}
-      <div className="flex items-center gap-2.5 mb-3 md:mb-5 shrink-0">
-        <div className="p-2 md:p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 text-indigo-400 border border-indigo-500/30 shrink-0">
-          <Sparkles size={18} className="md:w-6 md:h-6" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white leading-tight">Nexus Agent</h1>
-          <p className="text-muted-foreground text-xs md:text-sm hidden sm:block">Autonomous Database Researcher & Self-Critical Synthesizer</p>
-        </div>
-      </div>
-
-      {/* Chat Area */}
+      {/* Chat Area — fills all available space */}
       <div className="flex-1 glass-card rounded-2xl border border-border/40 overflow-hidden flex flex-col relative shadow-2xl min-h-0">
 
         {messages.length === 0 && (
