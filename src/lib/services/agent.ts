@@ -129,28 +129,22 @@ function createAgentGraph(userId: string) {
     - created_at (TIMESTAMP)
   `;
 
-  const systemPrompt = `You are Antigravity, an elite Senior AI Developer and Postdoctoral Researcher from Google DeepMind.
-You currently work as the core intelligence engine for 'Nexus AI'. You provide C-Suite-level insights to executives and researchers.
+  const systemPrompt = `You are Nexus, an elite data analyst AI powering the Nexus AI platform. You provide C-Suite-level insights to executives and researchers.
 
-You have access to a SQL database containing the following tables:
+You have access to a live SQL database. Use the \`query_database\` tool to run SELECT queries and get real data. Always query first, then answer.
+
+DATABASE SCHEMA:
 ${dbSchemaInfo}
 
-CRITICAL SECURITY REQUIREMENT:
-You are acting on behalf of user_id: '${userId}'. You MUST restrict ALL your SQL queries to this user's data.
-Whenever you query the \`datasets\` or \`records\` table, you MUST include \`user_id = '${userId}'\` in your WHERE clause.
+SECURITY: Every query MUST include \`user_id = '${userId}'\` in the WHERE clause. Never query other users' data.
 
-To execute read-only SQL queries on the tables, call the tool \`query_database\` by replying with standard JSON tool formatting.
-Tool Schema:
-{
-  "name": "query_database",
-  "arguments": {
-    "query": "SELECT count(*) FROM records WHERE user_id = '${userId}'"
-  }
-}
-
-When analyzing data, be CRITICAL and act like a Google Researcher. 
-Always look for systemic risks or hidden patterns that a casual observer would miss.
-Write in beautiful markdown format.
+RULES — follow these strictly:
+1. ALWAYS call \`query_database\` to get real data before answering. Never fabricate or assume numbers.
+2. Never show SQL queries, tool calls, or JSON in your response — only show the final analysis.
+3. Never say "let's assume", "assuming the query returns", or invent hypothetical data.
+4. If the database returns no rows, say so honestly.
+5. Write concise, natural prose. No unnecessary headers or lists unless the data warrants it.
+6. Keep responses focused and conversational — avoid academic-style padding.
 `;
 
   // Define graph channels
@@ -391,6 +385,18 @@ export async function runChat(
       break;
     }
   }
+
+  // Strip any leaked tool-call JSON blocks or "SQL Query" sections the model wrote as text
+  finalMessage = finalMessage
+    // Remove fenced code blocks containing tool call JSON
+    .replace(/```[\w]*\s*\{[\s\S]*?"name"\s*:\s*"query_database"[\s\S]*?\}\s*```/gi, '')
+    // Remove bare JSON objects that look like tool calls
+    .replace(/\{[\s\S]*?"name"\s*:\s*"query_database"[\s\S]*?\}/g, '')
+    // Remove "SQL Query" header sections that precede a code block
+    .replace(/#{1,4}\s*SQL\s*Query[\s\S]*?(?=\n#{1,4}|\n\n[A-Z]|$)/gi, '')
+    // Remove "let's assume" hallucination preambles
+    .replace(/let['']s assume[\s\S]*?(?=\n#{1,4}|\n\nBased on|$)/gi, '')
+    .trim();
 
   const logs = finalState.logs || [];
 
