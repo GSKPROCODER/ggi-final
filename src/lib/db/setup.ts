@@ -59,16 +59,10 @@ export const SETUP_SQL = `
 
 export async function ensureSchema(url: string): Promise<void> {
   try {
-    if (url.includes('neon.tech')) {
-      const { neon } = await import('@neondatabase/serverless');
-      const sql = neon(url);
-      await sql(SETUP_SQL);
-    } else {
-      const { Pool } = await import('pg');
-      const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
-      await pool.query(SETUP_SQL);
-      await pool.end();
-    }
+    const { Pool } = await import('pg');
+    const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+    await pool.query(SETUP_SQL);
+    await pool.end();
     console.log('[db:setup] Schema ready.');
   } catch (err) {
     console.error('[db:setup] Setup warning (non-fatal):', err);
