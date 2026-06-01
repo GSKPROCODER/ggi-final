@@ -61,10 +61,13 @@ function buildTimeSeries(records: RecordResponse[], days: number) {
 export default function Dashboard() {
   const [insights, setInsights] = useState<BatchInsights | null>(null);
   const [records, setRecords] = useState<RecordResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Split loading: KPI cards show as soon as stats arrive; charts load after
+  const [isKpiLoading, setIsKpiLoading] = useState(true);
+  const [isChartLoading, setIsChartLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [timeRange, setTimeRange] = useState(30);
   const [dbError, setDbError] = useState(false);
+  const [kpiStats, setKpiStats] = useState<Record<string, unknown> | null>(null);
 
   // Fine-grained Zustand selectors — pages don't re-render when unrelated slices change.
   const datasets = useStore((s) => s.datasets);
@@ -83,17 +86,28 @@ export default function Dashboard() {
   useEffect(() => {
     let cancelled = false;
     const loadData = async () => {
-      setIsLoading(true);
+      setIsKpiLoading(true);
+      setIsChartLoading(true);
+
       try {
-        const [dsRes, recRes, alertRes] = await Promise.all([
-          datasetsApi.list(),
-          analyzeApi.getHistory(100),
+        // Stage 1 — fast: stats aggregation + alerts (shows KPI cards immediately)
+        const [statsRes, alertRes] = await Promise.all([
+          analyzeApi.getStats(),
           alertsApi.list(),
+        ]);
+        if (cancelled) return;
+        setKpiStats(statsRes);
+        setAlerts(alertRes);
+        setIsKpiLoading(false);
+
+        // Stage 2 — slower: dataset list + history for chart (30 records is enough for trend)
+        const [dsRes, recRes] = await Promise.all([
+          datasetsApi.list(),
+          analyzeApi.getHistory(50),
         ]);
         if (cancelled) return;
         setDatasets(dsRes);
         setRecords(recRes.items);
-        setAlerts(alertRes);
 
         const latestCompleted = dsRes.find((d) => d.status === 'completed');
         if (latestCompleted) {
@@ -102,10 +116,9 @@ export default function Dashboard() {
             if (cancelled) return;
             setInsights(ins);
             setBatchInsights(ins);
-          } catch {
-            /* No insights yet */
-          }
+          } catch { /* No insights yet */ }
         }
+        if (!cancelled) setIsChartLoading(false);
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : '';
@@ -114,9 +127,9 @@ export default function Dashboard() {
           } else if (msg) {
             toast.error(msg);
           }
+          setIsKpiLoading(false);
+          setIsChartLoading(false);
         }
-      } finally {
-        if (!cancelled) setIsLoading(false);
       }
     };
     loadData();
@@ -152,7 +165,18 @@ export default function Dashboard() {
   const latestDataset = useMemo(() => datasets.find((d) => d.status === 'completed'), [datasets]);
   const totalRecords = records.length;
 
+  // Derive KPI numbers from the fast stats endpoint (available before chart data)
   const { sentimentScore, negPct } = useMemo(() => {
+    if (kpiStats) {
+      const dist = (kpiStats.sentiment_distribution as Record<string, number>) ?? {};
+      const total = (kpiStats.total_records as number) ?? 0;
+      if (total === 0) return { sentimentScore: 0, negPct: 0 };
+      return {
+        sentimentScore: Math.round(((dist.Positive ?? 0) / total) * 100),
+        negPct: Math.round(((dist.Negative ?? 0) / total) * 100),
+      };
+    }
+    // Fallback to local records while stats load
     if (totalRecords === 0) return { sentimentScore: 0, negPct: 0 };
     const pos = records.filter((r) => r.sentiment === 'Positive').length;
     const neg = records.filter((r) => r.sentiment === 'Negative').length;
@@ -160,7 +184,7 @@ export default function Dashboard() {
       sentimentScore: Math.round((pos / totalRecords) * 100),
       negPct: Math.round((neg / totalRecords) * 100),
     };
-  }, [records, totalRecords]);
+  }, [kpiStats, records, totalRecords]);
 
   const dominantEmotion = insights?.dominant_emotions?.[0]?.emotion ?? 'N/A';
   const riskLevel: Risk = insights?.risk_level ?? 'Low';
@@ -191,7 +215,8 @@ export default function Dashboard() {
     ];
   }, [records]);
 
-  const noData = !isLoading && totalRecords === 0 && !latestDataset;
+  const isLoading = isKpiLoading; // keep for no-data check
+  const noData = !isKpiLoading && !isChartLoading && totalRecords === 0 && !latestDataset && !kpiStats;
 
   if (noData) {
     return (
@@ -256,7 +281,7 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-        {isLoading ? (
+        {isKpiLoading ? (
           <>
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
           </>
@@ -322,7 +347,7 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-48 skeleton rounded-xl" />
           ) : (
             <SentimentTrendChart data={timeSeries} timeRange={timeRange} />
@@ -332,7 +357,7 @@ export default function Dashboard() {
         <div className="glass-card rounded-2xl border border-border/50 p-6">
           <h3 className="font-semibold mb-1">Emotion Distribution</h3>
           <p className="text-xs text-muted-foreground mb-6">From batch AI analysis</p>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-48 skeleton rounded-xl" />
           ) : pieData.length > 0 ? (
             <EmotionPieChart data={pieData} />
@@ -348,7 +373,7 @@ export default function Dashboard() {
             <h3 className="font-semibold mb-1">Risk Level Distribution</h3>
             <p className="text-xs text-muted-foreground mb-6">Aggregated from active records</p>
           </div>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-48 skeleton rounded-xl" />
           ) : totalRecords > 0 ? (
             <RiskBarChart data={riskData} />
@@ -363,7 +388,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="glass-card rounded-2xl border border-border/50 p-6">
           <h3 className="font-semibold mb-4">Top Keywords</h3>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-32 skeleton rounded-xl" />
           ) : (insights?.top_keywords?.length ?? 0) > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -392,7 +417,7 @@ export default function Dashboard() {
               View all <ChevronRight size={12} aria-hidden />
             </button>
           </div>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-32 skeleton rounded-xl" />
           ) : alerts.length > 0 ? (
             <ul className="space-y-3">
@@ -423,7 +448,7 @@ export default function Dashboard() {
 
         <div className="glass-card rounded-2xl border border-border/50 p-6">
           <h3 className="font-semibold mb-4">Recurring Issues</h3>
-          {isLoading ? (
+          {isChartLoading ? (
             <div className="h-32 skeleton rounded-xl" />
           ) : (insights?.recurring_issues?.length ?? 0) > 0 ? (
             <ol className="space-y-2">
@@ -450,7 +475,7 @@ export default function Dashboard() {
             Analyze more <ArrowRight size={12} aria-hidden />
           </button>
         </div>
-        {isLoading ? (
+        {isChartLoading ? (
           <div className="h-40 skeleton rounded-xl" />
         ) : records.length > 0 ? (
           <div className="overflow-x-auto -mx-2 sm:mx-0">
