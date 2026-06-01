@@ -8,6 +8,7 @@ import { parseCsvLine } from '@/lib/csv';
 import { eq, and } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
 /**
  * Handles POST requests to kick off non-blocking Gemini batch processing.
@@ -49,7 +50,7 @@ export async function POST(
 
         // Fetch CSV from Vercel Blob or read directly from disk if local
         if (d.filename?.includes('/api/v1/datasets/files/')) {
-          const filePath = path.join(process.cwd(), 'nexus-uploads', `${datasetId}.csv`);
+          const filePath = path.join(os.tmpdir(), 'nexus-uploads', `${datasetId}.csv`);
           content = await fs.readFile(filePath, 'utf-8');
         } else {
           const fileRes = await fetch(d.filename);

@@ -7,6 +7,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 /**
  * Handles GET requests to retrieve detailed dataset parameters.
@@ -81,7 +82,7 @@ export async function DELETE(
     // Delete file from Vercel Blob or local storage
     try {
       if (d.filename?.includes('/api/v1/datasets/files/')) {
-        const filePath = path.join(process.cwd(), 'nexus-uploads', `${datasetId}.csv`);
+        const filePath = path.join(os.tmpdir(), 'nexus-uploads', `${datasetId}.csv`);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }

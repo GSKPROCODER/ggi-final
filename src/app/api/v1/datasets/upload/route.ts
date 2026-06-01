@@ -8,6 +8,7 @@ import { parseCsvLine } from '@/lib/csv';
 import * as XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 /**
  * Parse uploaded file content into headers and row objects.
@@ -96,8 +97,8 @@ export async function POST(req: Request) {
       const blob = await put(serverFilename, rawCsvText, { access: 'public' });
       fileUrl = blob.url;
     } else {
-      // Local file fallback
-      const uploadDir = path.join(process.cwd(), 'nexus-uploads');
+      // Local file fallback — use os.tmpdir() so it works on both local dev and serverless (/tmp)
+      const uploadDir = path.join(os.tmpdir(), 'nexus-uploads');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }

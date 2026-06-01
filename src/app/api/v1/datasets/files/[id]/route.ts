@@ -1,11 +1,9 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
-/**
- * Handles GET requests to retrieve a locally stored CSV dataset file by ID.
- */
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -18,7 +16,7 @@ export async function GET(
       return NextResponse.json({ detail: 'Dataset ID is required.' }, { status: 400 });
     }
 
-    const filePath = path.join(process.cwd(), 'nexus-uploads', `${id}.csv`);
+    const filePath = path.join(os.tmpdir(), 'nexus-uploads', `${id}.csv`);
 
     try {
       const csvText = await fs.readFile(filePath, 'utf-8');
