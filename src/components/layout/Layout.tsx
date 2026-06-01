@@ -488,7 +488,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom tab bar — hidden on desktop */}
-      <MobileBottomNav onMenuOpen={() => setIsSidebarOpen(true)} />
+      <MobileBottomNav onMenuOpen={() => setIsSidebarOpen(true)} isSidebarOpen={isMobile && isSidebarOpen} />
     </div>
   );
 }

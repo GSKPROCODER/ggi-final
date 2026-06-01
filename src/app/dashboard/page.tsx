@@ -64,6 +64,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [timeRange, setTimeRange] = useState(30);
+  const [dbError, setDbError] = useState(false);
 
   // Fine-grained Zustand selectors — pages don't re-render when unrelated slices change.
   const datasets = useStore((s) => s.datasets);
@@ -108,7 +109,9 @@ export default function Dashboard() {
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : '';
-          if (msg && !msg.includes('Database') && !msg.includes('unavailable')) {
+          if (msg && (msg.includes('Database') || msg.includes('unavailable'))) {
+            setDbError(true);
+          } else if (msg) {
             toast.error(msg);
           }
         }
@@ -216,12 +219,12 @@ export default function Dashboard() {
     <div className="p-5 md:p-6 space-y-6 w-full min-h-full pb-8">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             {latestDataset ? `Analyzing: ${latestDataset.original_filename}` : 'Overview of your text intelligence data'}
           </p>
         </div>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-2 md:gap-3 flex-wrap">
           <button
             onClick={handleScan}
             disabled={isScanning}
@@ -240,7 +243,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {dbError && (
+        <div className="glass-card rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-400">Database connecting…</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Add <code className="bg-secondary/80 px-1 rounded text-foreground">DIRECT_URL</code> to your Vercel env vars (Supabase direct connection, port 5432) to enable auto-setup.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
         {isLoading ? (
           <>
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />

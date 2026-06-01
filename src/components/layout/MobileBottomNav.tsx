@@ -15,9 +15,10 @@ const TABS = [
 
 interface Props {
   onMenuOpen: () => void;
+  isSidebarOpen: boolean;
 }
 
-export function MobileBottomNav({ onMenuOpen }: Props) {
+export function MobileBottomNav({ onMenuOpen, isSidebarOpen }: Props) {
   const pathname = usePathname();
   const alerts = useStore((s) => s.alerts);
   const urgentCount = alerts.filter(
@@ -27,7 +28,10 @@ export function MobileBottomNav({ onMenuOpen }: Props) {
   return (
     <nav
       aria-label="Bottom navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-glass-border bg-card/95 backdrop-blur-xl"
+      className={cn(
+        'fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-glass-border bg-card/95 backdrop-blur-xl transition-transform duration-300',
+        isSidebarOpen ? 'translate-y-full' : 'translate-y-0',
+      )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-stretch h-14">
