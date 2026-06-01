@@ -21,9 +21,6 @@ export default function Page() {
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-background/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-              <Logo className="w-5 h-5" />
-            </div>
             Nexus AI
           </div>
           <div className="flex items-center gap-4">
@@ -180,7 +177,6 @@ export default function Page() {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-border/50 bg-background text-center">
         <div className="flex items-center justify-center gap-2 font-bold text-lg tracking-tight mb-4 text-muted-foreground">
-          <Logo className="w-5 h-5" />
           Nexus AI
         </div>
         <p className="text-sm text-muted-foreground">© 2026 Nexus AI Inc. All rights reserved.</p>
