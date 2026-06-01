@@ -68,9 +68,8 @@ export default function AgentChat() {
             <Sparkles size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               Nexus Agent
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 uppercase tracking-widest">DeepMind RAG</span>
             </h1>
             <p className="text-muted-foreground text-sm font-medium">Autonomous Database Researcher & Self-Critical Synthesizer</p>
           </div>
@@ -165,7 +164,7 @@ export default function AgentChat() {
                      handleSubmit(e);
                    }
                  }}
-                 placeholder="Ask the DeepMind agent to query your dataset..."
+                 placeholder="Ask the agent to query your dataset..."
                  className="w-full bg-transparent p-4 min-h-[56px] max-h-[200px] outline-none resize-none text-sm placeholder:text-muted-foreground/60"
                  rows={1}
                />
