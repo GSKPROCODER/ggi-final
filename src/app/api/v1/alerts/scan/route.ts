@@ -6,6 +6,8 @@ import { alerts, records } from '@/lib/db/schema';
 import { scanForAnomalies } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles POST requests to scan user records history for structural risk patterns
  * using Gemini. Creates and stores found anomalies as alert entries.

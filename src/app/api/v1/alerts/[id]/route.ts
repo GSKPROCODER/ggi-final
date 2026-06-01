@@ -5,6 +5,8 @@ import { alerts } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles DELETE requests to dismiss a single warning alert.
  */

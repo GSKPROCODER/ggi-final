@@ -5,6 +5,8 @@ import { records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { and, eq, inArray } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles DELETE requests to remove multiple selected history entries.
  */

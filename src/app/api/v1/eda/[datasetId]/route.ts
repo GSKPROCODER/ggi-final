@@ -5,6 +5,8 @@ import { datasets, records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to calculate Exploratory Data Analysis distributions
  * and statistical overview objects.

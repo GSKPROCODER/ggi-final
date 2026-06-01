@@ -10,6 +10,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Parse uploaded file content into headers and row objects.
  * Supports both CSV (text) and Excel (.xlsx) binary formats.

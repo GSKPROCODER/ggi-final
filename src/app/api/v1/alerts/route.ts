@@ -5,6 +5,8 @@ import { alerts } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to retrieve anomaly alerts.
  */
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
     const list = await db.query.alerts.findMany({
       where: and(...conditions),
       orderBy: [desc(alerts.createdAt)],
+      limit: 100,
     });
 
     return NextResponse.json(

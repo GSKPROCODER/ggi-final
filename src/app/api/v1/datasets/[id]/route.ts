@@ -9,6 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to retrieve detailed dataset parameters.
  */

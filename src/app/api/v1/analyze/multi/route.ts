@@ -3,6 +3,8 @@ import { handleApiError } from '@/lib/errors';
 import { analyzeText } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles POST requests to analyze an array of texts.
  */
@@ -13,6 +15,17 @@ export async function POST(req: Request) {
 
     if (!texts || !Array.isArray(texts)) {
       return NextResponse.json({ detail: 'Texts array is required.' }, { status: 400 });
+    }
+    if (texts.length === 0) {
+      return NextResponse.json({ detail: 'At least one text is required.' }, { status: 400 });
+    }
+    const MAX_TEXTS = 50;
+    if (texts.length > MAX_TEXTS) {
+      return NextResponse.json({ detail: `Maximum ${MAX_TEXTS} texts per request.` }, { status: 400 });
+    }
+    const totalChars = texts.reduce((s: number, t: unknown) => s + (typeof t === 'string' ? t.length : 0), 0);
+    if (totalChars > 100_000) {
+      return NextResponse.json({ detail: 'Total input exceeds 100,000 characters.' }, { status: 400 });
     }
 
     const sample = texts.slice(0, 10); // Limit concurrent single calls to 10 for safety

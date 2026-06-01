@@ -10,6 +10,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles POST requests to kick off non-blocking Gemini batch processing.
  * Uses after() to keep the Vercel function alive after the HTTP response is sent.
@@ -87,30 +89,40 @@ export async function POST(
         await db.update(datasets).set({ rowCount: texts.length }).where(eq(datasets.id, datasetId));
 
         let processed = 0;
-        for (const text of texts) {
-          try {
-            const analysis = await analyzeText(text);
-            await db.insert(records).values({
-              id: crypto.randomUUID(),
-              userId,
-              datasetId,
-              text,
-              summary: analysis.summary,
-              sentiment: analysis.sentiment,
-              emotion: analysis.emotion,
-              riskLevel: analysis.risk_level,
-              confidenceScore: parseFloat((analysis.confidence_score / 100).toFixed(4)),
-              keyIssuesJson: JSON.stringify(analysis.key_issues),
-              recommendationsJson: JSON.stringify(analysis.recommendations),
-            });
-          } catch (rowError) {
-            console.error('Row analysis failed:', rowError);
-          }
+        const CONCURRENCY = 5;
+        const UPDATE_EVERY = 10;
 
-          processed++;
-          await db.update(datasets)
-            .set({ processedCount: processed })
-            .where(eq(datasets.id, datasetId));
+        for (let i = 0; i < texts.length; i += CONCURRENCY) {
+          const batch = texts.slice(i, i + CONCURRENCY);
+          const results = await Promise.allSettled(
+            batch.map(async (text) => {
+              const analysis = await analyzeText(text);
+              await db.insert(records).values({
+                id: crypto.randomUUID(),
+                userId,
+                datasetId,
+                text,
+                summary: analysis.summary,
+                sentiment: analysis.sentiment,
+                emotion: analysis.emotion,
+                riskLevel: analysis.risk_level,
+                confidenceScore: parseFloat((analysis.confidence_score / 100).toFixed(4)),
+                keyIssuesJson: JSON.stringify(analysis.key_issues),
+                recommendationsJson: JSON.stringify(analysis.recommendations),
+              });
+            })
+          );
+          for (const r of results) {
+            if (r.status === 'rejected') console.error('Row analysis failed:', r.reason);
+          }
+          processed += results.filter((r) => r.status === 'fulfilled').length;
+
+          // Batch DB progress updates — write every UPDATE_EVERY rows or at end
+          if (processed % UPDATE_EVERY < CONCURRENCY || i + CONCURRENCY >= texts.length) {
+            await db.update(datasets)
+              .set({ processedCount: processed })
+              .where(eq(datasets.id, datasetId));
+          }
         }
 
         const insights = await generateBatchInsights(texts);

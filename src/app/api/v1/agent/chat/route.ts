@@ -3,6 +3,8 @@ import { handleApiError } from '@/lib/errors';
 import { runChat } from '@/lib/services/agent';
 import { requireAuth } from '@/lib/api/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles POST requests to run conversational database analytics.
  * Feeds chat messages directly into the DeepMind critic LangGraph state machine.

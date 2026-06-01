@@ -5,6 +5,8 @@ import { records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles DELETE requests to clear an individual record from the history catalog.
  */

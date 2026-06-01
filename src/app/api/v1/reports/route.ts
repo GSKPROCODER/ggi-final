@@ -6,6 +6,8 @@ import { generateReport } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to retrieve user report records.
  */
@@ -16,6 +18,7 @@ export async function GET(req: Request) {
     const list = await db.query.reports.findMany({
       where: eq(reports.userId, userId),
       orderBy: [desc(reports.createdAt)],
+      limit: 50,
     });
 
     return NextResponse.json(

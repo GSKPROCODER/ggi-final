@@ -72,10 +72,10 @@ async function generateAIContent(prompt: string, jsonMode = false, temperature =
   if (geminiKey) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
@@ -182,7 +182,8 @@ export async function generateBatchInsights(texts: string[]): Promise<{
   risk_level: 'Low' | 'Medium' | 'High';
   top_keywords: string[];
 }> {
-  const sample = texts.slice(0, 80);
+  const shuffled = [...texts].sort(() => Math.random() - 0.5);
+  const sample = shuffled.slice(0, 80);
   const joined = sample.map((t) => t.slice(0, 500)).join('\n---\n');
 
   const prompt = `You are an AI analyst. Analyze the following batch of ${sample.length} text records.

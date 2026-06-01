@@ -5,6 +5,8 @@ import { reports } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to retrieve report details.
  */

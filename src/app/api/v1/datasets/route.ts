@@ -5,6 +5,8 @@ import { datasets } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to retrieve a list of all uploaded datasets.
  */
@@ -15,6 +17,7 @@ export async function GET(req: Request) {
     const list = await db.query.datasets.findMany({
       where: eq(datasets.userId, userId),
       orderBy: [desc(datasets.createdAt)],
+      limit: 100,
     });
 
     return NextResponse.json(

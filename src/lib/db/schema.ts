@@ -18,6 +18,7 @@ export const datasets = pgTable('datasets', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('datasets_user_id_idx').on(t.userId),
+  index('datasets_status_idx').on(t.status),
 ]);
 
 export const records = pgTable('records', {
@@ -37,6 +38,7 @@ export const records = pgTable('records', {
   index('records_user_id_idx').on(t.userId),
   index('records_dataset_id_idx').on(t.datasetId),
   index('records_user_dataset_idx').on(t.userId, t.datasetId),
+  index('records_sentiment_idx').on(t.sentiment),
 ]);
 
 export const reports = pgTable('reports', {

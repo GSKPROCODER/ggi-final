@@ -57,8 +57,13 @@ export async function GET(
         }
       };
 
+      let interval: NodeJS.Timeout;
+      let keepalive: NodeJS.Timeout;
+
       req.signal.addEventListener('abort', () => {
         closed = true;
+        clearInterval(interval);
+        clearInterval(keepalive);
         try { controller.close(); } catch { /* already closed */ }
       });
 
@@ -103,13 +108,8 @@ export async function GET(
       // Initial snapshot
       await tick();
 
-      const interval = setInterval(tick, 1500);
-      const keepalive = setInterval(heartbeat, 15000);
-
-      req.signal.addEventListener('abort', () => {
-        clearInterval(interval);
-        clearInterval(keepalive);
-      });
+      interval = setInterval(tick, 1500);
+      keepalive = setInterval(heartbeat, 15000);
     },
   });
 

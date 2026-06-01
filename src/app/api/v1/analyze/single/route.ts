@@ -5,6 +5,8 @@ import { records } from '@/lib/db/schema';
 import { analyzeText } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles POST requests to analyze a single text string using Gemini.
  */

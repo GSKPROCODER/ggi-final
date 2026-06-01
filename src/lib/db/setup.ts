@@ -55,6 +55,8 @@ export const SETUP_SQL = `
   CREATE INDEX IF NOT EXISTS "records_user_dataset_idx" ON "records" ("user_id","dataset_id");
   CREATE INDEX IF NOT EXISTS "reports_user_id_idx" ON "reports" ("user_id");
   CREATE INDEX IF NOT EXISTS "alerts_user_id_idx" ON "alerts" ("user_id");
+  CREATE INDEX IF NOT EXISTS "records_sentiment_idx" ON "records" ("sentiment");
+  CREATE INDEX IF NOT EXISTS "datasets_status_idx" ON "datasets" ("status");
 `;
 
 export async function ensureSchema(url: string): Promise<void> {

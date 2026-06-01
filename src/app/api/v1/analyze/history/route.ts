@@ -5,6 +5,8 @@ import { records } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
 import { eq, and, ilike, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Handles GET requests to list historical text intelligence records.
  */
