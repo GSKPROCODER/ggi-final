@@ -143,7 +143,15 @@
 
   .glass-card:hover {
     border-color: color-mix(in srgb, var(--primary) 30%, var(--glass-border));
-    box-shadow: var(--shadow-glow);
+    box-shadow: var(--shadow-soft), var(--shadow-glow);
+  }
+
+  /* Interactive cards (clickable/linked) get a subtle lift on hover */
+  .glass-card-interactive {
+    cursor: pointer;
+  }
+  .glass-card-interactive:hover {
+    transform: translateY(-2px);
   }
 
   .glass-panel {

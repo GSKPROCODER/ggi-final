@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Search,
   LayoutDashboard,
   BarChart3,
   UploadCloud,
@@ -20,7 +19,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Command,
   PanelLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
@@ -65,6 +63,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const processingDatasetId = useStore((s) => s.processingDatasetId);
   const setBatchProcessing = useStore((s) => s.setBatchProcessing);
   const setDatasets = useStore((s) => s.setDatasets);
+  const alerts = useStore((s) => s.alerts);
+
+  // Count unread medium/high alerts for the sidebar badge
+  const urgentAlertCount = alerts.filter(
+    (a) => !a.is_read && (a.severity === 'high' || a.severity === 'medium'),
+  ).length;
 
   const [showFloatingDone, setShowFloatingDone] = useState(false);
   const [lastProgress, setLastProgress] = useState(0);
@@ -256,32 +260,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Search Bar */}
-        <div className="px-4 pb-4 shrink-0">
-          <div className={cn("flex items-center gap-2 rounded-[14px] bg-secondary/50 border border-glass-border transition-all", isSidebarOpen ? "px-3 py-2" : "p-2 justify-center")}>
-            <Search size={16} className="text-muted-foreground shrink-0" />
-            <AnimatePresence mode="wait">
-              {isSidebarOpen && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex items-center justify-between min-w-0">
-                  <span className="text-sm text-muted-foreground font-medium">Search</span>
-                  <div className="flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/40 shadow-sm">
-                    <Command size={10} /> S
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
         {/* Nav Sections */}
-        <div className="flex-1 overflow-y-auto px-3 space-y-6 scrollbar-hide pb-4">
+        <div className="flex-1 overflow-y-auto px-3 pt-2 space-y-6 scrollbar-hide pb-4">
           
           {/* MAIN SECTION */}
           <div className="space-y-1">
             <AnimatePresence>
               {isSidebarOpen && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2">
-                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Main</p>
+                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">Main</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -310,7 +297,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <AnimatePresence>
               {isSidebarOpen && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-3 pb-2">
-                  <p className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Workspace</p>
+                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">Workspace</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -324,11 +311,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <item.icon size={18} className={cn('shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
                   <AnimatePresence>
                     {isSidebarOpen && (
-                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] whitespace-nowrap overflow-hidden">
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] whitespace-nowrap overflow-hidden flex-1">
                         {item.name}
                       </motion.span>
                     )}
                   </AnimatePresence>
+                  {item.name === 'Alerts' && urgentAlertCount > 0 && (
+                    <span className={cn(
+                      'min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 shrink-0',
+                      !isSidebarOpen && 'absolute top-1 right-1',
+                    )}>
+                      {urgentAlertCount > 9 ? '9+' : urgentAlertCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -347,7 +342,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-w-0 flex items-center justify-between">
                   <div className="flex flex-col min-w-0 pr-2">
                     <p className="text-[13px] font-semibold truncate leading-tight">{displayName}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5 truncate">Designer</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {user?.primaryEmailAddress?.emailAddress ?? 'Member'}
+                    </p>
                   </div>
                   <ChevronLeft size={14} className="text-muted-foreground -rotate-90 shrink-0" />
                 </motion.div>
@@ -404,7 +401,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               }}
               className={cn(
                 "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[999] w-[calc(100vw-2rem)] md:w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
-                "bg-[#0f172a]/90 backdrop-blur-xl shadow-2xl hover:scale-[1.02]",
+                "bg-card/95 backdrop-blur-xl shadow-2xl hover:scale-[1.02]",
                 isBatchProcessing 
                   ? "border-primary/40 shadow-primary/10" 
                   : batchError

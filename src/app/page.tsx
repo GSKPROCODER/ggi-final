@@ -6,7 +6,6 @@ import { useAuth } from '@clerk/nextjs';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { ArrowRight, BarChart3, ShieldAlert, Zap, Database } from 'lucide-react';
-import Logo from '@/components/Logo';
 
 export default function Page() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -162,8 +161,8 @@ export default function Page() {
                 description: "Upload massive CSV datasets and extract structured insights in minutes."
               }
             ].map((feature, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6">
+              <div key={i} className="group p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-200">
                   <feature.icon size={24} />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>

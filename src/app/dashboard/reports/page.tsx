@@ -198,7 +198,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
         <div className="grid gap-4">
           {[1, 2, 3].map(i => <div key={i} className="h-24 skeleton rounded-2xl" />)}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && !isGenerating ? (
         <div className="text-center py-20 space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto">
             <FileText size={28} className="text-muted-foreground" />
@@ -218,9 +218,22 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
         </div>
       ) : (
         <div className="grid gap-4">
+          {isGenerating && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="glass-card rounded-2xl border border-primary/30 p-5 flex items-center gap-4"
+            >
+              <Loader2 className="animate-spin text-primary shrink-0" size={20} />
+              <div className="flex-1 min-w-0">
+                <div className="skeleton h-4 w-48 max-w-full rounded mb-2" />
+                <div className="skeleton h-3 w-32 max-w-full rounded" />
+              </div>
+              <span className="text-xs text-muted-foreground shrink-0">Generating…</span>
+            </motion.div>
+          )}
           {filtered.map(report => (
             <motion.div key={report.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="glass-card rounded-2xl border border-border/50 p-5 hover:border-primary/30 transition-all group">
+              className="glass-card glass-card-interactive rounded-2xl border border-border/50 p-5 group">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold group-hover:text-primary transition-colors truncate">{report.title}</h3>

@@ -22,6 +22,7 @@ import {
 
 export default function ManageHistory() {
   const [records, setRecords] = useState<RecordResponse[]>([]);
+  const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function ManageHistory() {
     try {
       const res = await analyzeApi.getHistory(100, undefined, query);
       setRecords(res.items);
+      setTotal(res.total);
       setSelectedIds((prev) => {
         if (prev.size === 0) return prev;
         const availableIds = new Set(res.items.map((r) => r.id));
@@ -157,6 +159,13 @@ export default function ManageHistory() {
           </button>
         </form>
       </div>
+
+      {!isLoading && total > 0 && (
+        <p className="text-xs text-muted-foreground -mt-2">
+          Showing <span className="text-foreground font-medium">{records.length}</span> of{' '}
+          <span className="text-foreground font-medium">{total}</span> record{total === 1 ? '' : 's'}
+        </p>
+      )}
 
       <div className="glass-card rounded-2xl border border-border/50 overflow-hidden relative">
         <div className="overflow-x-auto">
