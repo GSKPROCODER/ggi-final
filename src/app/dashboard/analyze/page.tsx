@@ -256,10 +256,7 @@ export default function Analyze() {
         <div className="xl:col-span-1">
           <AnimatePresence>
             {showHistory && (
-              <motion.div
-                initial={reduce ? false : { opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, x: 20 }}
+              <div
                 className="glass-card rounded-2xl border border-border/50 p-4"
               >
                 <h3 className="font-semibold text-sm mb-4">Recent Analyses</h3>
@@ -294,7 +291,7 @@ export default function Analyze() {
                     ))}
                   </ul>
                 )}
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
@@ -302,17 +299,14 @@ export default function Analyze() {
 
       <AnimatePresence>
         {isAnalyzing && (
-          <motion.div
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="glass-card rounded-2xl border border-border/50 p-12 text-center"
             role="status"
             aria-live="polite"
           >
             <Loader2 size={36} className="text-primary animate-spin mx-auto mb-4" aria-hidden />
             <p className="text-muted-foreground">Gemini is analyzing your text...</p>
-          </motion.div>
+          </div>
         )}
 
         {!isAnalyzing && result && (
@@ -328,9 +322,7 @@ export default function Analyze() {
         {!isAnalyzing && multiResult && (
           <div className="space-y-4">
             {multiResult.aggregate && (
-              <motion.div
-                initial={reduce ? false : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+              <div
                 className="glass-card rounded-2xl border border-primary/20 bg-primary/5 p-6"
               >
                 <h3 className="font-semibold mb-4">Aggregate Summary — {multiResult.aggregate.total} texts</h3>
@@ -346,7 +338,7 @@ export default function Analyze() {
                     <p className="text-xs text-muted-foreground">Avg Confidence</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
             <div>
               <h2 className="font-semibold mb-4">Individual Results ({multiResult.results.length})</h2>

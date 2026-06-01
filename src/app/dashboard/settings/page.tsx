@@ -71,7 +71,7 @@ export default function Settings() {
                 )}
               >
                 {isActive && (
-                  <motion.div layoutId="active-tab" className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                  <div layoutId="active-tab" className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                 )}
                 <tab.icon size={18} className={cn("transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
                 {tab.label}
@@ -90,12 +90,8 @@ export default function Settings() {
         {/* Content */}
         <div className="flex-1 relative z-10">
           <AnimatePresence mode="wait">
-            <motion.div
+            <div
               key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="p-5 md:p-10 space-y-8 md:space-y-10"
             >
 
@@ -143,12 +139,12 @@ export default function Settings() {
                           )}
                     >
                       {theme === 'dark' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
-                      <motion.div initial={{ rotate: 0 }} animate={{ rotate: theme === 'dark' ? 0 : -15 }} transition={{ duration: 0.5, type: 'spring' }} 
+                      <div initial={{ rotate: 0 }} animate={{ rotate: theme === 'dark' ? 0 : -15 }} transition={{ duration: 0.5, type: 'spring' }} 
                         className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'dark' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
                         style={theme === 'dark' ? { boxShadow: 'var(--shadow-glow)' } : {}}
                       >
                         <Moon size={24} />
-                      </motion.div>
+                      </div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">Dark</span>
                       {theme === 'dark' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
@@ -161,12 +157,12 @@ export default function Settings() {
                       )}
                     >
                       {theme === 'light' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
-                      <motion.div initial={{ rotate: 0 }} animate={{ rotate: theme === 'light' ? 0 : 15 }} transition={{ duration: 0.5, type: 'spring' }} 
+                      <div initial={{ rotate: 0 }} animate={{ rotate: theme === 'light' ? 0 : 15 }} transition={{ duration: 0.5, type: 'spring' }} 
                         className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'light' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
                         style={theme === 'light' ? { boxShadow: 'var(--shadow-glow)' } : {}}
                       >
                         <Sun size={24} />
-                      </motion.div>
+                      </div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">Light</span>
                       {theme === 'light' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
@@ -179,12 +175,12 @@ export default function Settings() {
                       )}
                     >
                       {theme === 'system' && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />}
-                      <motion.div initial={{ scale: 1 }} animate={{ scale: theme === 'system' ? 1.1 : 1 }} transition={{ duration: 0.5, type: 'spring' }} 
+                      <div initial={{ scale: 1 }} animate={{ scale: theme === 'system' ? 1.1 : 1 }} transition={{ duration: 0.5, type: 'spring' }} 
                         className={cn("relative z-10 p-3 rounded-full border transition-all", theme === 'system' ? "bg-primary/20 border-primary/30" : "bg-background border-border/50")}
                         style={theme === 'system' ? { boxShadow: 'var(--shadow-glow)' } : {}}
                       >
                         <Monitor size={24} />
-                      </motion.div>
+                      </div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">System</span>
                       {theme === 'system' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
@@ -234,7 +230,7 @@ export default function Settings() {
                         "w-12 h-6 rounded-full flex items-center px-1 border transition-colors shadow-inner",
                         item.active ? "bg-primary/20 border-primary/30 justify-end" : "bg-secondary border-border/50 justify-start"
                       )}>
-                        <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 30 }} className={cn(
+                        <div layout transition={{ type: "spring", stiffness: 500, damping: 30 }} className={cn(
                           "w-4 h-4 rounded-full shadow-md",
                           item.active ? "bg-primary shadow-primary/40" : "bg-muted-foreground"
                         )} />
@@ -293,7 +289,7 @@ export default function Settings() {
               </div>
             )}
 
-          </motion.div>
+          </div>
           </AnimatePresence>
         </div>
       </div>
@@ -301,7 +297,7 @@ export default function Settings() {
       <AnimatePresence>
         {showConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            <div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               className="glass-card rounded-2xl border border-destructive/20 w-full max-w-md p-6 flex flex-col gap-6">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-destructive/10 text-destructive shrink-0">
@@ -324,7 +320,7 @@ export default function Settings() {
                   Sign Out
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>

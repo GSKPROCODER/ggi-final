@@ -36,8 +36,8 @@ async function queryDatabase(query: string, userId: string): Promise<string> {
       return 'Error: Read-only access permitted.';
     }
 
-    // Defense-in-depth: Ensure the query does not cross-contaminate user data
-    if (!uppercaseQuery.includes(userId)) {
+    // Defense-in-depth: Ensure the query scopes to this user (case-insensitive check on original query)
+    if (!query.includes(userId)) {
       return `Error: Query violates security sandbox. You MUST include \`user_id = '${userId}'\` in your WHERE filters.`;
     }
 

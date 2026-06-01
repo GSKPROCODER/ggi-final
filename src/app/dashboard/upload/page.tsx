@@ -157,7 +157,7 @@ Great value for money. Will definitely buy again.,4,Low
   // ── Step Renderers ────────────────────────────────────────────────────────
 
   const renderUpload = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold mb-1">Upload Your Dataset</h2>
@@ -172,14 +172,12 @@ Great value for money. Will definitely buy again.,4,Low
       </div>
 
       {error && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-sm text-destructive">
+        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle size={16} />{error}
-        </motion.div>
+        </div>
       )}
 
-      <motion.div
-        animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
-        transition={{ duration: 0.4 }}
+      <div
         onDragOver={(e: any) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
@@ -218,7 +216,7 @@ Great value for money. Will definitely buy again.,4,Low
             </>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Example datasets hint */}
       <div className="glass-card p-4 rounded-xl border border-border/40">
@@ -229,7 +227,7 @@ Great value for money. Will definitely buy again.,4,Low
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   const renderColumnMapping = () => {
@@ -237,7 +235,7 @@ Great value for money. Will definitely buy again.,4,Low
     const filteredCols = dataset?.columns.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())) || [];
 
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold mb-1">Select Text Columns</h2>
@@ -296,7 +294,7 @@ Great value for money. Will definitely buy again.,4,Low
             const isSelected = selectedColumns.includes(col);
             
             return (
-              <motion.div
+              <div
                 key={col}
                 whileHover={{ scale: 1.01 }}
                 onClick={() => setSelectedColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col])}
@@ -327,7 +325,7 @@ Great value for money. Will definitely buy again.,4,Low
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -344,12 +342,12 @@ Great value for money. Will definitely buy again.,4,Low
           Start Analysis <ArrowRight size={16} />
         </button>
       </div>
-    </motion.div>
+    </div>
   );
   };
 
   const renderProcessing = () => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 py-8">
+    <div className="space-y-8 py-8">
       <div className="text-center">
         <div className={cn(
           "w-20 h-20 rounded-full border flex items-center justify-center mx-auto mb-6",
@@ -386,13 +384,11 @@ Great value for money. Will definitely buy again.,4,Low
           </span>
         </div>
         <div className="h-3 bg-secondary rounded-full overflow-hidden">
-          <motion.div
+          <div
             className={cn(
               "h-full rounded-full",
               batchError ? "bg-destructive/60" : "bg-gradient-to-r from-primary to-blue-500"
             )}
-            animate={{ width: `${batchProgress}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         </div>
         <div className="flex justify-between text-xs text-muted-foreground">
@@ -437,16 +433,16 @@ Great value for money. Will definitely buy again.,4,Low
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 
   const renderDone = () => (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 py-8 text-center">
+    <div className="space-y-8 py-8 text-center">
       <div>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }}
+        <div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }}
           className="w-24 h-24 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={48} className="text-primary" />
-        </motion.div>
+        </div>
         <h2 className="text-2xl font-semibold mb-2">Analysis Complete!</h2>
         <p className="text-muted-foreground">
           Successfully analyzed <span className="text-primary font-semibold">{dataset?.original_filename}</span>
@@ -476,7 +472,7 @@ Great value for money. Will definitely buy again.,4,Low
           View Dashboard <ArrowRight size={16} />
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 
   const recentDatasets = datasets.slice(0, 3);
@@ -512,25 +508,19 @@ Great value for money. Will definitely buy again.,4,Low
 
       {/* Step content */}
       <AnimatePresence mode="popLayout">
-        <motion.div
+        <div
           key={step}
-          initial={{ opacity: 0, y: 15, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
         >
           {step === 'upload' && renderUpload()}
           {step === 'columns' && renderColumnMapping()}
           {step === 'process' && renderProcessing()}
           {step === 'done' && renderDone()}
-        </motion.div>
+        </div>
       </AnimatePresence>
 
       {/* QoL Recent Activity Panel (only shown on upload step for clean UI) */}
       {step === 'upload' && recentDatasets.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
           className="space-y-4 pt-6 border-t border-border/40"
         >
           <div className="flex items-center justify-between">
@@ -572,7 +562,7 @@ Great value for money. Will definitely buy again.,4,Low
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

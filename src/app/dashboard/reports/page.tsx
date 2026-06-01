@@ -143,7 +143,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
       {/* Generate Panel */}
       <AnimatePresence>
         {showGenerate && (
-          <motion.div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+          <div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             className="overflow-hidden">
             <div className="glass-card rounded-2xl border border-primary/20 bg-primary/5 p-6 space-y-4">
               <h3 className="font-semibold">Generate New Report</h3>
@@ -169,7 +169,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -210,8 +210,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
       ) : (
         <div className="grid gap-4">
           {isGenerating && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            <div
               className="glass-card rounded-2xl border border-primary/30 p-5 flex items-center gap-4"
             >
               <Loader2 className="animate-spin text-primary shrink-0" size={20} />
@@ -220,10 +219,10 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                 <div className="skeleton h-3 w-32 max-w-full rounded" />
               </div>
               <span className="text-xs text-muted-foreground shrink-0">Generating…</span>
-            </motion.div>
+            </div>
           )}
           {filtered.map(report => (
-            <motion.div key={report.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            <div key={report.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="glass-card glass-card-interactive rounded-2xl border border-border/50 p-5 group">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -244,7 +243,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -253,10 +252,9 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
       <AnimatePresence>
         {isPreviewOpen && selectedReport && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setIsPreviewOpen(false)} />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            <div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               className="fixed inset-y-0 right-0 w-full max-w-2xl bg-background border-l border-border/50 z-50 overflow-y-auto">
               <div className="sticky top-0 bg-background/95 backdrop-blur border-b border-border/50 p-5 flex items-center justify-between">
                 <div>
@@ -359,7 +357,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                   </section>
                 )}
               </div>
-            </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

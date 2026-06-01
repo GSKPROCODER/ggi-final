@@ -2,9 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Bot, Send, User, ChevronDown, ChevronRight, Loader2, KeySquare } from 'lucide-react';
-import { agentApi, type AgentMessage, type AgentLog } from '@/lib/api';
+import { Bot, Send, User, Loader2 } from 'lucide-react';
+import { agentApi, type AgentMessage } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -19,9 +18,7 @@ export default function AgentChat() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [activeLogs, setActiveLogs] = useState<AgentLog[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,14 +38,11 @@ export default function AgentChat() {
     setMessages(newContext);
     setInput('');
     setIsTyping(true);
-    setActiveLogs([]);
 
     try {
       const res = await agentApi.chat(newContext);
-      
       const assistantMsg: AgentMessage = { role: 'assistant', content: res.message };
       setMessages(prev => [...prev, assistantMsg]);
-      setActiveLogs(res.thought_process);
     } catch (err) {
       const errorMsg: AgentMessage = { role: 'assistant', content: "⚠️ Critical Error: The Nexus Agent failed to process the request. Please verify the backend LangGraph connection." };
       setMessages(prev => [...prev, errorMsg]);
@@ -67,7 +61,7 @@ export default function AgentChat() {
 
   return (
     <div
-      className="flex flex-col w-full animate-in fade-in zoom-in-95 duration-500"
+      className="flex flex-col w-full"
       style={{ height: 'calc(100svh - 3.5rem - 3.5rem)', maxHeight: 'calc(100svh - 3.5rem - 3.5rem)' }}
     >
       {/* Chat Area — fills all available space, edge-to-edge like Gemini/Claude */}
@@ -97,12 +91,9 @@ export default function AgentChat() {
         )}
 
         <div className="flex-1 overflow-y-auto px-3 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 scroll-smooth scroll-touch">
-          <AnimatePresence>
             {messages.map((m, idx) => (
-              <motion.div
+              <div
                 key={idx}
-                initial={reduce ? false : { opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
                 className={cn('flex gap-2 md:gap-4 max-w-[90%] md:max-w-[85%]', m.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto')}
               >
                 <div className={cn(
@@ -130,30 +121,19 @@ export default function AgentChat() {
                     )}
                   </div>
 
-                  {m.role === 'assistant' && activeLogs.length > 0 && idx === messages.length - 1 && (
-                     <div className="mt-3">
-                        <ThoughtProcess logs={activeLogs} />
-                     </div>
-                  )}
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
 
           {isTyping && (
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4 max-w-[85%] mr-auto">
-                <div className="w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0 shadow-lg shadow-black/20">
-                  <Loader2 size={18} className="text-indigo-400 animate-spin" />
-                </div>
-                <div className="glass-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-muted-foreground flex items-center gap-3">
-                  <span className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50 animate-bounce" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50 animate-bounce delay-100" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50 animate-bounce delay-200" />
-                  </span>
-                  Synthesizing & running self-critique...
-                </div>
-             </motion.div>
+            <div className="flex gap-3 max-w-[85%] mr-auto">
+              <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0">
+                <Loader2 size={15} className="text-muted-foreground animate-spin" />
+              </div>
+              <div className="glass-card border border-border/50 px-4 py-3 rounded-2xl rounded-tl-sm text-sm text-muted-foreground">
+                Thinking…
+              </div>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -191,51 +171,6 @@ export default function AgentChat() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Collapsible Thought Process Component to show the exact SQL Run and Critic evaluations
-function ThoughtProcess({ logs }: { logs: AgentLog[] }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="mt-2 text-xs w-full max-w-sm">
-      <button 
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors py-1 px-2 rounded-lg hover:bg-secondary/50 font-medium"
-      >
-        {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        View Agent Thought Process ({logs.length} steps)
-      </button>
-
-      <AnimatePresence>
-        {open && (
-           <motion.div
-             initial={{ height: 0, opacity: 0 }}
-             animate={{ height: 'auto', opacity: 1 }}
-             exit={{ height: 0, opacity: 0 }}
-             className="overflow-hidden mt-2"
-           >
-             <div className="bg-black/50 border border-border/50 rounded-xl p-3 space-y-2.5 font-mono">
-               {logs.map((log, i) => (
-                 <div key={i} className="flex flex-col gap-1 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                   <span className={cn(
-                     "text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded w-max",
-                     log.type === "thought" ? "bg-blue-500/20 text-blue-400" :
-                     log.type === "tool_result" ? "bg-emerald-500/20 text-emerald-400" :
-                     log.type === "critique" ? "bg-amber-500/20 text-amber-400" :
-                     "bg-white/10 text-white/70"
-                   )}>
-                     {log.type.replace('_', ' ')}
-                   </span>
-                   <span className="text-white/80 whitespace-pre-wrap leading-relaxed">{log.content}</span>
-                 </div>
-               ))}
-             </div>
-           </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
