@@ -183,7 +183,7 @@ export default function Alerts() {
               const cfg = SEVERITY_CONFIG[alert.severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.low;
               const isExpanded = expandedId === alert.id;
               return (
-                <div key={alert.id} layout={!reduce}
+                <motion.div key={alert.id} layout={!reduce}
                   initial={reduce ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0 }}
                   className={cn('glass-card rounded-2xl border p-5 transition-all', cfg.border, !alert.is_read && 'shadow-sm', alert.is_read && 'opacity-70')}>
                   <div className="flex items-start justify-between gap-4">
@@ -217,7 +217,7 @@ export default function Alerts() {
                   {/* Expanded detail */}
                   <AnimatePresence>
                     {isExpanded && (
-                      <div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                      <motion.div initial={reduce ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
                         className="overflow-hidden">
                         <div className="mt-4 pt-4 border-t border-border/30 space-y-3">
                           <p className="text-sm text-foreground/90 leading-relaxed">{alert.message}</p>
@@ -234,10 +234,10 @@ export default function Alerts() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               );
             })}
           </AnimatePresence>

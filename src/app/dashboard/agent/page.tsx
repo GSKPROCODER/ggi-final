@@ -166,7 +166,6 @@ export default function AgentChat() {
           </form>
           <div className="text-center mt-3">
              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest flex items-center justify-center gap-1.5 opacity-60">
-                <KeySquare size={12} /> Powered by LangGraph & Gemini 2.5 Flash
              </p>
           </div>
         </div>
