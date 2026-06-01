@@ -127,8 +127,8 @@ const EDA: React.FC = () => {
         setData(stats);
       }
     } catch (err) {
-      toast.error("Failed to load analytics engine.");
-      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'Failed to load analytics engine.');
+      console.error('[EDA]', err);
     } finally {
       setLoading(false);
     }
@@ -141,7 +141,7 @@ const EDA: React.FC = () => {
       const stats = await edaApi.getEDAMetrics(id);
       setData(stats);
     } catch (err) {
-      toast.error("Cloud analytics unreachable.");
+      toast.error(err instanceof Error ? err.message : 'Could not load analytics for this dataset.');
     } finally {
       setLoading(false);
     }

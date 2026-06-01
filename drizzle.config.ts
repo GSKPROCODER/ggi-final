@@ -7,7 +7,11 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? '',
+    // DIRECT_URL (port 5432) is required for migrations — Supabase's pooler (6543) blocks DDL.
+    url: process.env.DIRECT_URL
+      ?? process.env.DATABASE_URL
+      ?? process.env.POSTGRES_URL
+      ?? '',
     ssl: { rejectUnauthorized: false },
   },
 });

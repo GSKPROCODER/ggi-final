@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   TrendingUp, TrendingDown, AlertTriangle, Brain, Database,
@@ -75,6 +75,10 @@ export default function Dashboard() {
 
   const router = useRouter();
 
+  // Ref so the interval can read latest datasets without being a dep of the effect.
+  const datasetsRef = useRef(datasets);
+  datasetsRef.current = datasets;
+
   useEffect(() => {
     let cancelled = false;
     const loadData = async () => {
@@ -98,7 +102,7 @@ export default function Dashboard() {
             setInsights(ins);
             setBatchInsights(ins);
           } catch {
-            /* No insights yet, that's fine */
+            /* No insights yet */
           }
         }
       } catch (err) {
@@ -111,8 +115,9 @@ export default function Dashboard() {
     };
     loadData();
 
+    // Auto-refresh only while a dataset is processing — read via ref to avoid re-running the effect.
     const interval = setInterval(() => {
-      if (!cancelled && datasets.some((d) => d.status === 'processing')) {
+      if (!cancelled && datasetsRef.current.some((d) => d.status === 'processing')) {
         loadData();
       }
     }, 30_000);
@@ -121,7 +126,8 @@ export default function Dashboard() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [setDatasets, setAlerts, setBatchInsights, datasets]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setDatasets, setAlerts, setBatchInsights]);
 
   const handleScan = async () => {
     setIsScanning(true);
