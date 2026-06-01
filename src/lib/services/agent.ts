@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
 
-const GEMINI_AGENT_MODEL = 'gemini-2.0-flash';
+const GEMINI_AGENT_MODEL = 'gemini-2.5-flash';
 
 export type AgentMessage = { role: 'user' | 'assistant'; content: string };
 export type AgentLog = { type: string; content: string };
