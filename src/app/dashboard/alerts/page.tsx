@@ -37,7 +37,12 @@ export default function Alerts() {
         setAlerts(data);
         storeSetAlerts(data);
       } catch (err) {
-        if (!cancelled) toast.error(err instanceof Error ? err.message : 'Failed to load alerts.');
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : '';
+          if (msg && !msg.includes('Database') && !msg.includes('unavailable')) {
+            toast.error(msg || 'Failed to load alerts.');
+          }
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }

@@ -107,7 +107,10 @@ export default function Dashboard() {
         }
       } catch (err) {
         if (!cancelled) {
-          toast.error(err instanceof Error ? err.message : 'Failed to load dashboard data.');
+          const msg = err instanceof Error ? err.message : '';
+          if (msg && !msg.includes('Database') && !msg.includes('unavailable')) {
+            toast.error(msg);
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false);

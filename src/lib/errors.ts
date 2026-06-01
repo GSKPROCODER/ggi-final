@@ -37,6 +37,20 @@ export class NotFoundError extends ApiError {
   }
 }
 
+function sanitizeDbError(message: string): string {
+  if (
+    message.includes('Failed query') ||
+    message.includes('does not exist') ||
+    message.includes('relation') ||
+    message.includes('syntax error') ||
+    message.includes('column') ||
+    message.includes('operator does not exist')
+  ) {
+    return 'Database temporarily unavailable. Please try again in a moment.';
+  }
+  return message;
+}
+
 /**
  * Server-side helper used in route handler catch blocks.
  * Maps any thrown value to a NextResponse with the correct status.
@@ -49,14 +63,13 @@ export function handleApiError(err: unknown): NextResponse {
     return NextResponse.json({ detail: err.message }, { status: err.status });
   }
 
-  // Preserve the legacy `requireAuth()` contract that throws plain Errors with
-  // "Unauthorized" prefix — those should still map to 401.
   if (err instanceof Error) {
     const status = err.message.startsWith('Unauthorized') ? 401 : 500;
-    if (process.env.NODE_ENV !== 'production' && status === 500) {
+    if (status === 500) {
       console.error('[api]', err);
     }
-    return NextResponse.json({ detail: err.message || 'Internal server error.' }, { status });
+    const safeMessage = status === 500 ? sanitizeDbError(err.message) : err.message;
+    return NextResponse.json({ detail: safeMessage || 'Internal server error.' }, { status });
   }
 
   return NextResponse.json({ detail: 'Internal server error.' }, { status: 500 });

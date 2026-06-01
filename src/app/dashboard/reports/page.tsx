@@ -32,7 +32,12 @@ export default function Reports() {
         const data = await reportsApi.list();
         if (!cancelled) setReports(data);
       } catch (err) {
-        if (!cancelled) toast.error(err instanceof Error ? err.message : 'Failed to load reports.');
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : '';
+          if (msg && !msg.includes('Database') && !msg.includes('unavailable')) {
+            toast.error(msg || 'Failed to load reports.');
+          }
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
