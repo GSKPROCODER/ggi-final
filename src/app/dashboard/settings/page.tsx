@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Save, User, Bell, Shield, Database, Moon, Sun, Monitor, AlertTriangle, Info } from 'lucide-react';
+import { Save, User, Bell, Shield, Database, Moon, Sun, Monitor, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
@@ -155,7 +155,7 @@ export default function Settings() {
                         <Moon size={24} />
                       </motion.div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">Dark</span>
-                      {theme === 'dark' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
+                      {theme === 'dark' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
                     
                     <button 
@@ -173,7 +173,7 @@ export default function Settings() {
                         <Sun size={24} />
                       </motion.div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">Light</span>
-                      {theme === 'light' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
+                      {theme === 'light' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
 
                     <button 
@@ -191,7 +191,7 @@ export default function Settings() {
                         <Monitor size={24} />
                       </motion.div>
                       <span className="relative z-10 text-sm font-semibold tracking-wide">System</span>
-                      {theme === 'system' && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary" style={{ boxShadow: 'var(--shadow-glow)' }} />}
+                      {theme === 'system' && <CheckCircle2 size={16} className="absolute top-3 right-3 z-10 text-primary" />}
                     </button>
                       </>
                     )}
