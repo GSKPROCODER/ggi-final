@@ -51,12 +51,17 @@ async function queryDatabase(query: string, userId: string): Promise<string> {
     const rows = result.rows;
 
     if (!rows || rows.length === 0) {
-      return 'No results found for that query.';
+      return 'EMPTY_RESULT: The query returned no rows. The user likely has no data uploaded yet, or no records match the filter.';
     }
 
     return JSON.stringify(rows);
   } catch (error: any) {
-    return `SQL Error: ${error.message || error}`;
+    const msg: string = error.message || String(error);
+    // Table doesn't exist — guide the user instead of showing a raw error
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('42P01')) {
+      return 'NO_TABLES: Database tables have not been created yet. The user needs to upload a dataset and process it first.';
+    }
+    return `SQL Error: ${msg}`;
   }
 }
 
@@ -142,9 +147,10 @@ RULES — follow these strictly:
 1. ALWAYS call \`query_database\` to get real data before answering. Never fabricate or assume numbers.
 2. Never show SQL queries, tool calls, or JSON in your response — only show the final analysis.
 3. Never say "let's assume", "assuming the query returns", or invent hypothetical data.
-4. If the database returns no rows, say so honestly.
-5. Write concise, natural prose. No unnecessary headers or lists unless the data warrants it.
-6. Keep responses focused and conversational — avoid academic-style padding.
+4. If the tool returns EMPTY_RESULT, say: "No records found yet. Upload a CSV dataset and process it to see your data here."
+5. If the tool returns NO_TABLES, say: "Your database isn't set up yet. Go to Upload Data, import a CSV, and run analysis first."
+6. Write concise, natural prose. No unnecessary headers or lists unless the data warrants it.
+7. Keep responses focused and conversational — avoid academic-style padding.
 `;
 
   // Define graph channels
