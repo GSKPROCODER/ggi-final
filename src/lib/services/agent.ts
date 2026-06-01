@@ -377,7 +377,21 @@ export async function runChat(
   };
 
   const finalState = (await agent.invoke(inputState, config)) as unknown as AgentState;
-  const finalMessage = finalState.messages[finalState.messages.length - 1].content as string;
+
+  // Walk back to find the last AIMessage with actual prose content, skipping tool-call stubs.
+  let finalMessage = 'Analysis complete. Please ask a specific question about your data.';
+  const allMsgs = finalState.messages;
+  for (let i = allMsgs.length - 1; i >= 0; i--) {
+    const msg = allMsgs[i];
+    if (!(msg instanceof AIMessage)) continue;
+    const hasText = typeof msg.content === 'string' && msg.content.trim().length > 0;
+    const isToolCall = !!(msg.additional_kwargs?.tool_calls?.length);
+    if (hasText && !isToolCall) {
+      finalMessage = msg.content as string;
+      break;
+    }
+  }
+
   const logs = finalState.logs || [];
 
   return [finalMessage, logs];

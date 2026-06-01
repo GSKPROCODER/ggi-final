@@ -15,6 +15,7 @@ export const datasets = pgTable('datasets', {
   processedCount: integer('processed_count').notNull().default(0),
   errorMessage: text('error_message'),
   insightsJson: text('insights_json'),
+  rawCsvText: text('raw_csv_text'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('datasets_user_id_idx').on(t.userId),

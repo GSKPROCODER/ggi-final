@@ -48,8 +48,10 @@ export async function POST(
       try {
         let content = '';
 
-        // Fetch CSV from Vercel Blob or read directly from disk if local
-        if (d.filename?.includes('/api/v1/datasets/files/')) {
+        // Priority: DB inline → Vercel Blob URL → local disk
+        if (d.rawCsvText) {
+          content = d.rawCsvText;
+        } else if (d.filename?.includes('/api/v1/datasets/files/')) {
           const filePath = path.join(os.tmpdir(), 'nexus-uploads', `${datasetId}.csv`);
           content = await fs.readFile(filePath, 'utf-8');
         } else {

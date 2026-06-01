@@ -52,8 +52,11 @@ export default function Alerts() {
     setIsScanning(true);
     try {
       const newAlerts = await alertsApi.scan();
-      setAlerts((prev) => [...newAlerts, ...prev]);
-      storeSetAlerts([...newAlerts, ...alerts]);
+      setAlerts((prev) => {
+        const merged = [...newAlerts, ...prev];
+        storeSetAlerts(merged);
+        return merged;
+      });
       toast.success(`Scan complete: ${newAlerts.length} new alert${newAlerts.length === 1 ? '' : 's'}.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Anomaly scan failed.');

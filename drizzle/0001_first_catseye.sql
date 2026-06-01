@@ -1,0 +1,1 @@
+ALTER TABLE "datasets" ADD COLUMN "raw_csv_text" text;

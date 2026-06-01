@@ -115,7 +115,7 @@ export default function AgentChat() {
                   )}>
                     {m.role === 'assistant' ? (
                       <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-border/50">
-                        <ReactMarkdown>
+                        <ReactMarkdown skipHtml>
                           {m.content}
                         </ReactMarkdown>
                       </div>
@@ -160,7 +160,7 @@ export default function AgentChat() {
                  value={input}
                  onChange={e => setInput(e.target.value)}
                  onKeyDown={e => {
-                   if (e.key === 'Enter' && !e.shiftKey) {
+                   if (e.key === 'Enter' && !e.shiftKey && !isTyping) {
                      e.preventDefault();
                      handleSubmit(e);
                    }

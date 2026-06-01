@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: '%s | Nexus AI',
   },
   description: 'Enterprise-grade sentiment analysis, anomaly detection, and automated C-Suite reporting powered by multi-model AI.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://ggi-final.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.nexusproject.sbs'),
   icons: {
     icon: '/favicon.svg',
   },

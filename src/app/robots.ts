@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/dashboard/',
       },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://ggi-final.vercel.app'}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.nexusproject.sbs'}/sitemap.xml`,
   };
 }
