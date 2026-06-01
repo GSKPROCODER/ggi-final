@@ -87,7 +87,7 @@ export default function Dashboard() {
         ]);
         if (cancelled) return;
         setDatasets(dsRes);
-        setRecords(recRes);
+        setRecords(recRes.items);
         setAlerts(alertRes);
 
         const latestCompleted = dsRes.find((d) => d.status === 'completed');
@@ -110,10 +110,18 @@ export default function Dashboard() {
       }
     };
     loadData();
+
+    const interval = setInterval(() => {
+      if (!cancelled && datasets.some((d) => d.status === 'processing')) {
+        loadData();
+      }
+    }, 30_000);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
-  }, [setDatasets, setAlerts, setBatchInsights]);
+  }, [setDatasets, setAlerts, setBatchInsights, datasets]);
 
   const handleScan = async () => {
     setIsScanning(true);

@@ -16,6 +16,9 @@ export async function POST(req: Request) {
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ detail: 'Valid text parameter is required.' }, { status: 400 });
     }
+    if (text.length > 10_000) {
+      return NextResponse.json({ detail: 'Text must be 10,000 characters or fewer.' }, { status: 400 });
+    }
 
     // Call Gemini analysis service
     const analysis = await analyzeText(text);

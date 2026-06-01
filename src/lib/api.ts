@@ -77,13 +77,21 @@ export interface RecordResponse extends AnalysisResult {
 }
 
 export interface MultiAnalyzeResponse {
-  results: AnalysisResult[];
+  results: (AnalysisResult & { error?: string })[];
   aggregate: {
     total: number;
+    failed_count: number;
     sentiment_distribution: Record<string, number>;
     avg_confidence: number;
     dominant_risk: string;
   } | null;
+}
+
+export interface HistoryResponse {
+  items: RecordResponse[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface EmotionPoint {
@@ -277,11 +285,11 @@ export const analyzeApi = {
       body: JSON.stringify({ texts }),
     }),
 
-  getHistory: (limit = 50, sentiment?: string, search?: string) => {
-    const params = new URLSearchParams({ limit: String(limit) });
+  getHistory: (limit = 50, sentiment?: string, search?: string, offset = 0) => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     if (sentiment) params.set('sentiment', sentiment);
     if (search) params.set('search', search);
-    return request<RecordResponse[]>(`/analyze/history?${params}`);
+    return request<HistoryResponse>(`/analyze/history?${params}`);
   },
 
   delete: (id: string) => request<void>(`/analyze/history/${id}`, { method: 'DELETE' }),

@@ -5,8 +5,30 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'Nexus AI — Executive Text Intelligence & Data Analytics',
-  description: 'Production-grade semantic analysis, anomaly alerts, and automated C-Suite reporting engine powered by Gemini.',
+  title: {
+    default: 'Nexus AI — Executive Text Intelligence',
+    template: '%s | Nexus AI',
+  },
+  description: 'Enterprise-grade sentiment analysis, anomaly detection, and automated C-Suite reporting powered by multi-model AI.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://ggi-final.vercel.app'),
+  icons: {
+    icon: '/favicon.svg',
+  },
+  openGraph: {
+    title: 'Nexus AI — Executive Text Intelligence',
+    description: 'Analyze sentiment, detect anomalies, and generate executive reports from your CSV datasets in real-time.',
+    url: '/',
+    siteName: 'Nexus AI',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Nexus AI Dashboard' }],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nexus AI — Executive Text Intelligence',
+    description: 'Analyze sentiment, detect anomalies, and generate executive reports from your CSV datasets.',
+    images: ['/og-image.png'],
+  },
 };
 
 /**
@@ -25,7 +47,18 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased transition-colors duration-300" suppressHydrationWarning>
-        <ClerkProvider>
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: '#38bdf8',
+              colorBackground: '#0a0a0f',
+              colorInputBackground: '#11141a',
+              colorText: '#f8fafc',
+              colorTextSecondary: '#94a3b8',
+              borderRadius: '0.75rem',
+            },
+          }}
+        >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             {children}
             <Toaster position="bottom-right" richColors />

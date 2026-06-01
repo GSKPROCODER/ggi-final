@@ -22,15 +22,17 @@ export async function POST(req: Request) {
       sample.map(async (t) => {
         try {
           return await analyzeText(t);
-        } catch {
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Analysis failed.';
           return {
-            summary: 'Error running analysis.',
+            error: message,
+            summary: 'Analysis failed.',
             sentiment: 'Neutral' as const,
             emotion: 'Neutral',
             key_issues: [],
             risk_level: 'Low' as const,
             recommendations: [],
-            confidence_score: 50,
+            confidence_score: 0,
           };
         }
       })
@@ -52,10 +54,13 @@ export async function POST(req: Request) {
     if (riskCounts.High > riskCounts.Medium && riskCounts.High > riskCounts.Low) dominantRisk = 'High';
     else if (riskCounts.Medium > riskCounts.Low) dominantRisk = 'Medium';
 
+    const failedCount = results.filter((r: any) => r.error).length;
+
     return NextResponse.json({
       results,
       aggregate: total > 0 ? {
         total,
+        failed_count: failedCount,
         sentiment_distribution: sentimentCounts,
         avg_confidence: parseFloat((totalConfidence / total).toFixed(2)),
         dominant_risk: dominantRisk,

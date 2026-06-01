@@ -4,32 +4,10 @@ import { put } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { datasets } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/api/auth';
+import { parseCsvLine } from '@/lib/csv';
 import * as XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
-
-/**
- * Parse a CSV line respecting quotes containing commas.
- */
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"' || char === "'") {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim().replace(/^["']|["']$/g, ''));
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim().replace(/^["']|["']$/g, ''));
-  return result;
-}
 
 /**
  * Parse uploaded file content into headers and row objects.
@@ -102,6 +80,9 @@ export async function POST(req: Request) {
 
     if (!file) {
       return NextResponse.json({ detail: 'No file uploaded.' }, { status: 400 });
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ detail: 'File must be 50 MB or less.' }, { status: 400 });
     }
 
     const originalFilename = file.name;

@@ -27,14 +27,23 @@ export async function GET(req: Request) {
       conditions.push(ilike(records.text, `%${search}%`));
     }
 
-    const history = await db.query.records.findMany({
-      where: and(...conditions),
-      orderBy: [desc(records.createdAt)],
-      limit,
-    });
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    return NextResponse.json(
-      history.map((r) => ({
+    const [history, allForCount] = await Promise.all([
+      db.query.records.findMany({
+        where: and(...conditions),
+        orderBy: [desc(records.createdAt)],
+        limit,
+        offset,
+      }),
+      db.query.records.findMany({
+        where: and(...conditions),
+        columns: { id: true },
+      }),
+    ]);
+
+    return NextResponse.json({
+      items: history.map((r) => ({
         id: r.id,
         text: r.text,
         summary: r.summary,
@@ -45,8 +54,11 @@ export async function GET(req: Request) {
         key_issues: JSON.parse(r.keyIssuesJson || '[]'),
         recommendations: JSON.parse(r.recommendationsJson || '[]'),
         created_at: r.createdAt.toISOString(),
-      }))
-    );
+      })),
+      total: allForCount.length,
+      limit,
+      offset,
+    });
   } catch (err) {
     return handleApiError(err);
   }

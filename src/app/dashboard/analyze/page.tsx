@@ -36,7 +36,7 @@ export default function Analyze() {
     analyzeApi
       .getHistory(20)
       .then((h) => {
-        if (!cancelled) setHistory(h);
+        if (!cancelled) setHistory(h.items);
       })
       .catch(() => {
         /* silent — history is non-critical */
@@ -73,7 +73,7 @@ export default function Analyze() {
       const res = await analyzeApi.multi(texts);
       setMultiResult(res);
       const hist = await analyzeApi.getHistory(20);
-      setHistory(hist);
+      setHistory(hist.items);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Multi-analysis failed.');
     } finally {

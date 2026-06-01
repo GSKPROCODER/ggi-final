@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, real } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, real, index } from 'drizzle-orm/pg-core';
 
 // userId is the Clerk user ID (e.g. "user_2abc...") — no local users table needed.
 
@@ -16,7 +16,9 @@ export const datasets = pgTable('datasets', {
   errorMessage: text('error_message'),
   insightsJson: text('insights_json'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index('datasets_user_id_idx').on(t.userId),
+]);
 
 export const records = pgTable('records', {
   id: text('id').primaryKey(),
@@ -31,7 +33,11 @@ export const records = pgTable('records', {
   keyIssuesJson: text('key_issues_json').notNull().default('[]'),
   recommendationsJson: text('recommendations_json').notNull().default('[]'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index('records_user_id_idx').on(t.userId),
+  index('records_dataset_id_idx').on(t.datasetId),
+  index('records_user_dataset_idx').on(t.userId, t.datasetId),
+]);
 
 export const reports = pgTable('reports', {
   id: text('id').primaryKey(),
@@ -44,7 +50,9 @@ export const reports = pgTable('reports', {
   recommendationsJson: text('recommendations_json').notNull().default('[]'),
   metricsJson: text('metrics_json').notNull().default('[]'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index('reports_user_id_idx').on(t.userId),
+]);
 
 export const alerts = pgTable('alerts', {
   id: text('id').primaryKey(),
@@ -54,4 +62,6 @@ export const alerts = pgTable('alerts', {
   severity: text('severity').notNull().default('low'),
   isRead: boolean('is_read').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index('alerts_user_id_idx').on(t.userId),
+]);

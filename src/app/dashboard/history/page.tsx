@@ -34,10 +34,10 @@ export default function ManageHistory() {
     setIsLoading(true);
     try {
       const res = await analyzeApi.getHistory(100, undefined, query);
-      setRecords(res);
+      setRecords(res.items);
       setSelectedIds((prev) => {
         if (prev.size === 0) return prev;
-        const availableIds = new Set(res.map((r) => r.id));
+        const availableIds = new Set(res.items.map((r) => r.id));
         return new Set([...prev].filter((x) => availableIds.has(x)));
       });
     } catch (err) {

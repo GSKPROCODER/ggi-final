@@ -4,29 +4,10 @@ import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
 import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
 import { requireAuth } from '@/lib/api/auth';
+import { parseCsvLine } from '@/lib/csv';
 import { eq, and } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
-
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"' || char === "'") {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim().replace(/^["']|["']$/g, ''));
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim().replace(/^["']|["']$/g, ''));
-  return result;
-}
 
 /**
  * Handles POST requests to kick off non-blocking Gemini batch processing.
