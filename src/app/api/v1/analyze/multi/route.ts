@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     if (riskCounts.High > riskCounts.Medium && riskCounts.High > riskCounts.Low) dominantRisk = 'High';
     else if (riskCounts.Medium > riskCounts.Low) dominantRisk = 'Medium';
 
-    const failedCount = results.filter((r: any) => r.error).length;
+    const failedCount = results.filter((r) => 'error' in r && r.error).length;
 
     return NextResponse.json({
       results,
