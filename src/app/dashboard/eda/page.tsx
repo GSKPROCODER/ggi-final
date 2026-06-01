@@ -237,6 +237,7 @@ const EDA: React.FC = () => {
           description="Emotional spectrum analysis"
           icon={PieChartIcon}
         >
+          <div style={{ width: '100%', height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -259,13 +260,15 @@ const EDA: React.FC = () => {
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>
           </ResponsiveContainer>
+          </div>
         </ChartContainer>
 
-        <ChartContainer 
+        <ChartContainer
           title="Risk Profile" 
           description="Security vulnerability assessment"
           icon={AlertTriangle}
         >
+          <div style={{ width: '100%', height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={distributions.risk}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -282,13 +285,15 @@ const EDA: React.FC = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </ChartContainer>
 
-        <ChartContainer 
+        <ChartContainer
           title="Information Density" 
           description="Semantic richness (text length)"
           icon={LineChartIcon}
         >
+          <div style={{ width: '100%', height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={distributions.length}>
               <defs>
@@ -312,6 +317,7 @@ const EDA: React.FC = () => {
               />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
         </ChartContainer>
 
         <div className="bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center text-center">

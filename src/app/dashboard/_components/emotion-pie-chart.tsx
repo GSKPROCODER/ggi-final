@@ -15,7 +15,8 @@ interface Props {
 export default function EmotionPieChart({ data }: Props) {
   return (
     <>
-      <ResponsiveContainer width="100%" height={160}>
+      <div style={{ width: '100%', height: 160 }}>
+    <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie data={data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" paddingAngle={3}>
             {data.map((entry, i) => (
@@ -32,6 +33,7 @@ export default function EmotionPieChart({ data }: Props) {
           />
         </PieChart>
       </ResponsiveContainer>
+    </div>
       <ul className="space-y-2 mt-2">
         {data.slice(0, 4).map((e) => (
           <li key={e.name} className="flex items-center justify-between text-xs">

@@ -16,7 +16,8 @@ interface Props {
 
 export default function RiskBarChart({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <div style={{ width: '100%', height: 220 }}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 20, right: 30, left: -20, bottom: 5 }} barSize={40}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis
@@ -45,5 +46,6 @@ export default function RiskBarChart({ data }: Props) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   );
 }

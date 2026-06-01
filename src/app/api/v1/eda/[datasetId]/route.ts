@@ -30,7 +30,7 @@ export async function GET(
     }
 
     const dsRecords = await db.query.records.findMany({
-      where: eq(records.datasetId, datasetId),
+      where: and(eq(records.datasetId, datasetId), eq(records.userId, userId)),
     });
 
     const totalRecords = d.rowCount || dsRecords.length || 0;
@@ -60,7 +60,8 @@ export async function GET(
       if (r.riskLevel) riskCounts[r.riskLevel] = (riskCounts[r.riskLevel] || 0) + 1;
     });
 
-    const avgChars = totalRecords > 0 ? Math.round(totalChars / totalRecords) : 0;
+    // Divide by analyzed records, not raw row count — avoids showing 0 when processing hasn't run yet
+    const avgChars = dsRecords.length > 0 ? Math.round(totalChars / dsRecords.length) : 0;
     const analyzedCount = dsRecords.length;
     const missingPct = totalRecords > 0 ? ((totalRecords - analyzedCount) / totalRecords) * 100 : 0;
 
