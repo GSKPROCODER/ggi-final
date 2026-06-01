@@ -26,6 +26,7 @@ export default function UploadData() {
   const [error, setError] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [processingTime, setProcessingTime] = useState(0);
+  const [rawCsvText, setRawCsvText] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -67,6 +68,7 @@ export default function UploadData() {
     setIsUploading(true);
     try {
       const uploadRes = await datasetsApi.upload(f);
+      setRawCsvText(uploadRes.raw_csv_text);
       const detail = await datasetsApi.getById(uploadRes.id);
       setDataset(detail);
       // Auto-detect likely text columns
@@ -119,7 +121,7 @@ Great value for money. Will definitely buy again.,4,Low
     setBatchProcessing(true, 0, 'Starting...', dataset.id);
 
     try {
-      await datasetsApi.process(dataset.id, selectedColumns.join(', '));
+      await datasetsApi.process(dataset.id, selectedColumns.join(', '), rawCsvText);
       // Handled globally by the Layout.tsx polling engine!
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start processing.');
@@ -399,7 +401,7 @@ Great value for money. Will definitely buy again.,4,Low
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
         {[
           { label: 'Sentiment Analysis', icon: '😊' },
           { label: 'Emotion Detection', icon: '🎭' },
@@ -451,7 +453,7 @@ Great value for money. Will definitely buy again.,4,Low
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Records Analyzed', value: dataset?.row_count?.toLocaleString() },
           { label: 'Processing Time', value: `${processingTime}s` },

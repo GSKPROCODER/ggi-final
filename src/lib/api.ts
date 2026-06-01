@@ -23,6 +23,7 @@ export interface DatasetUploadResponse {
   id: string;
   filename: string;
   original_filename: string;
+  raw_csv_text?: string;
   columns: string[];
   row_count: number;
   status: string;
@@ -259,10 +260,10 @@ export const datasetsApi = {
 
   getById: (id: string) => request<DatasetDetailResponse>(`/datasets/${id}`),
 
-  process: (id: string, text_column: string) =>
+  process: (id: string, text_column: string, raw_csv_text?: string) =>
     request<{ message: string }>(`/datasets/${id}/process`, {
       method: 'POST',
-      body: JSON.stringify({ text_column }),
+      body: JSON.stringify({ text_column, ...(raw_csv_text ? { raw_csv_text } : {}) }),
     }),
 
   getStatus: (id: string) => request<DatasetStatusResponse>(`/datasets/${id}/status`),

@@ -363,7 +363,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <header className="h-14 shrink-0 flex items-center justify-between px-4 md:px-5 border-b border-border/30 bg-background/80 backdrop-blur-xl z-10">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1.5 -ml-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2.5 -ml-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
               title="Toggle Sidebar"
             >
               <PanelLeft size={18} />
@@ -403,7 +403,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }
               }}
               className={cn(
-                "fixed bottom-6 right-6 z-[999] w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
+                "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[999] w-[calc(100vw-2rem)] md:w-80 p-4 rounded-2xl cursor-pointer select-none border transition-all duration-300",
                 "bg-[#0f172a]/90 backdrop-blur-xl shadow-2xl hover:scale-[1.02]",
                 isBatchProcessing 
                   ? "border-primary/40 shadow-primary/10" 

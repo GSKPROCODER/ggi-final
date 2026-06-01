@@ -118,14 +118,13 @@ export async function POST(req: Request) {
       columnsJson: JSON.stringify(headers),
       sampleRowsJson: JSON.stringify(sampleRows),
       status: 'pending',
-      // Store CSV inline when no Blob token — survives cross-invocation on Vercel
-      rawCsvText: process.env.BLOB_READ_WRITE_TOKEN ? null : rawCsvText,
     });
 
     return NextResponse.json({
       id: datasetId,
       filename: fileUrl,
       original_filename: originalFilename,
+      raw_csv_text: process.env.BLOB_READ_WRITE_TOKEN ? undefined : rawCsvText,
       columns: headers,
       row_count: rowCount,
       status: 'pending',

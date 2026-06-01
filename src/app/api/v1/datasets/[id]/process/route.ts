@@ -22,7 +22,7 @@ export async function POST(
     const userId = await requireAuth();
     const resolvedParams = await params;
     const datasetId = resolvedParams.id;
-    const { text_column } = await req.json();
+    const { text_column, raw_csv_text: rawCsvFromBody } = await req.json();
 
     if (!text_column) {
       return NextResponse.json({ detail: 'Mapped text column is required.' }, { status: 400 });
@@ -48,9 +48,9 @@ export async function POST(
       try {
         let content = '';
 
-        // Priority: DB inline → Vercel Blob URL → local disk
-        if (d.rawCsvText) {
-          content = d.rawCsvText;
+        // Priority: request body (cross-invocation safe) → Blob URL → local disk
+        if (rawCsvFromBody) {
+          content = rawCsvFromBody;
         } else if (d.filename?.includes('/api/v1/datasets/files/')) {
           const filePath = path.join(os.tmpdir(), 'nexus-uploads', `${datasetId}.csv`);
           content = await fs.readFile(filePath, 'utf-8');

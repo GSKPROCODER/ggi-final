@@ -241,7 +241,7 @@ export default function ManageHistory() {
             initial={reduce ? false : { y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={reduce ? { opacity: 0 } : { y: 100, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-card/80 backdrop-blur-xl border border-border px-6 py-4 rounded-2xl shadow-2xl flex-wrap"
+            className="fixed bottom-4 left-4 right-4 md:left-1/2 md:right-auto md:bottom-6 md:-translate-x-1/2 z-50 flex items-center gap-3 bg-card/80 backdrop-blur-xl border border-border px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-2xl flex-wrap justify-center"
             role="region"
             aria-label="Bulk actions"
           >

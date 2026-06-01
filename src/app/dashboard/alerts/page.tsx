@@ -139,7 +139,7 @@ export default function Alerts() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {(['all', 'high', 'medium', 'low'] as const).map(s => {
           const cfg = s === 'all' ? null : SEVERITY_CONFIG[s];
           return (
@@ -210,11 +210,11 @@ export default function Alerts() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button onClick={() => setExpandedId(isExpanded ? null : alert.id)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/50 transition-colors">
+                        className="p-2 rounded-lg text-muted-foreground hover:bg-secondary/50 transition-colors">
                         {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                       </button>
                       <button onClick={() => dismiss(alert.id)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                        className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                         <X size={15} />
                       </button>
                     </div>

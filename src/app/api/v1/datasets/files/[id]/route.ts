@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
-import { db } from '@/lib/db';
-import { datasets } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
@@ -12,8 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ detail: 'Dataset ID is required.' }, { status: 400 });
@@ -30,17 +26,7 @@ export async function GET(
         },
       });
     } catch {
-      // Disk file gone (cross-invocation on Vercel) — fall back to DB inline storage
-      const row = await db.query.datasets.findFirst({ where: eq(datasets.id, id) });
-      if (row?.rawCsvText) {
-        return new NextResponse(row.rawCsvText, {
-          headers: {
-            'Content-Type': 'text/csv; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${id}.csv"`,
-          },
-        });
-      }
-      return NextResponse.json({ detail: 'Dataset file not found.' }, { status: 404 });
+      return NextResponse.json({ detail: 'Dataset file not found locally.' }, { status: 404 });
     }
   } catch (err) {
     return handleApiError(err);

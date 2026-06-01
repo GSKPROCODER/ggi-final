@@ -101,7 +101,7 @@ export default function Settings() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="p-10 space-y-10"
+              className="p-5 md:p-10 space-y-8 md:space-y-10"
             >
 
             {activeTab === 'profile' && (
@@ -137,7 +137,7 @@ export default function Settings() {
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Appearance</h3>
                   <p className="text-sm text-muted-foreground mb-4">Customize how Nexus AI looks on your device.</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {mounted && (
                       <>
                         <button 
