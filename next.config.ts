@@ -11,7 +11,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['pg', 'bcryptjs'],
+  serverExternalPackages: [
+    'pg',
+    'bcryptjs',
+    'jsonwebtoken',
+    'xlsx',
+    '@langchain/core',
+    '@langchain/langgraph',
+    '@langchain/openai',
+  ],
 
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'motion'],
