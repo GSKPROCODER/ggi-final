@@ -243,13 +243,10 @@ export default function Dashboard() {
   return (
     <div className="p-5 md:p-6 space-y-6 w-full min-h-full pb-8">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl md:text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            {latestDataset ? `Analyzing: ${latestDataset.original_filename}` : 'Overview of your text intelligence data'}
-          </p>
-        </div>
-        <div className="flex gap-2 md:gap-3 flex-wrap">
+        {latestDataset && (
+          <p className="text-xs text-muted-foreground truncate max-w-[180px] md:max-w-xs">{latestDataset.original_filename}</p>
+        )}
+        <div className="flex gap-2 md:gap-3 flex-wrap ml-auto">
           <button
             onClick={handleScan}
             disabled={isScanning}

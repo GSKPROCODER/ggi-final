@@ -50,11 +50,6 @@ export default function Settings() {
 
   return (
     <div className="p-6 w-full space-y-8 pb-20">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your account preferences and application settings.</p>
-      </div>
-
       <div className="flex flex-col md:flex-row rounded-3xl border border-border/40 bg-glass shadow-soft min-h-[600px] relative overflow-hidden">
         {/* Subtle top glare */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-10" />

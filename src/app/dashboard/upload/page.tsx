@@ -483,16 +483,6 @@ Great value for money. Will definitely buy again.,4,Low
 
   return (
     <div className="p-5 md:p-6 space-y-8 w-full pb-16">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            <Upload size={20} />
-          </div>
-          Upload Dataset
-        </h1>
-        <p className="text-muted-foreground mt-1">Import your CSV and analyze it with Gemini AI</p>
-      </div>
-
       {/* Step indicator */}
       <div className="flex items-center gap-0">
         {STEPS.map((s, i) => {

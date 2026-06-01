@@ -132,17 +132,8 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
 
   return (
     <div className="p-5 md:p-6 space-y-6 w-full pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <FileText size={20} />
-            </div>
-            Reports
-          </h1>
-          <p className="text-muted-foreground mt-1">AI-generated intelligence reports from your data</p>
-        </div>
+      {/* Actions row */}
+      <div className="flex items-center justify-end">
         <button onClick={() => setShowGenerate(!showGenerate)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
           <Plus size={16} /> Generate Report

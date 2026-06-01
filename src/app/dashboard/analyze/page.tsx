@@ -106,18 +106,7 @@ export default function Analyze() {
 
   return (
     <div className="p-5 md:p-8 space-y-6 w-full pb-10">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Brain size={20} aria-hidden />
-            </div>
-            Analyze Text
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Real-time sentiment, emotion, and risk analysis powered by Gemini
-          </p>
-        </div>
+      <div className="flex items-center justify-end flex-wrap gap-3">
         <button
           onClick={() => setShowHistory(!showHistory)}
           aria-expanded={showHistory}

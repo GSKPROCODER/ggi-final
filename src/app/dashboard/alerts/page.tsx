@@ -117,18 +117,8 @@ export default function Alerts() {
 
   return (
     <div className="p-5 md:p-6 space-y-6 w-full pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-400">
-              <Bell size={20} />
-            </div>
-            Alerts
-          </h1>
-          <p className="text-muted-foreground mt-1">AI-detected anomalies and risk signals from your data</p>
-        </div>
-        <div className="flex gap-3">
+      {/* Actions row */}
+      <div className="flex items-center justify-end gap-3">
           {alerts.length > 0 && (
             <button onClick={clearAll}
               className="px-4 py-2 rounded-xl border border-border/50 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors">
@@ -140,7 +130,6 @@ export default function Alerts() {
             {isScanning ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             {isScanning ? 'Scanning...' : 'Scan Now'}
           </button>
-        </div>
       </div>
 
       {/* Stats row */}
