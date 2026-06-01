@@ -38,6 +38,12 @@
 
 @layer base {
   :root {
+    /* Safe-area inset variables for notch/home-indicator clearance */
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+
     /* Premium Light Mode (Crisp, Apple/Stripe aesthetic) */
     --background: #f8fafc;
     --foreground: #0f172a;
@@ -116,6 +122,8 @@
   }
 
   body {
+    /* Prevent iOS rubber-band overscroll on the app shell */
+    overscroll-behavior: none;
     font-family: var(--font-sans);
     background: var(--background);
     color: var(--foreground);
@@ -247,6 +255,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Remove tap highlight flash on mobile */
+  * { -webkit-tap-highlight-color: transparent; }
+
+  /* Native momentum scroll for scrollable containers */
+  .scroll-touch { -webkit-overflow-scrolling: touch; }
 }
 
 @keyframes shimmer {

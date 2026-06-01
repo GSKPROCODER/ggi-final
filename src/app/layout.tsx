@@ -1,8 +1,20 @@
 import {ClerkProvider} from "@clerk/nextjs";
 import '@/index.css';
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/ThemeProvider';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)',  color: '#020617' },
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -13,6 +25,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.nexusproject.sbs'),
   icons: {
     icon: '/favicon.svg',
+    apple: '/apple-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Nexus AI',
   },
   openGraph: {
     title: 'Nexus AI — Executive Text Intelligence',

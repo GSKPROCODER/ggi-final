@@ -26,6 +26,7 @@ import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
 import { datasetsApi } from '@/lib/api';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 
 const mainNav = [
   { name: 'Dashboard',   path: '/dashboard',           icon: LayoutDashboard, exact: true },
@@ -356,8 +357,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Topbar */}
-        <header className="h-14 shrink-0 flex items-center justify-between px-4 md:px-5 border-b border-border/30 bg-background/80 backdrop-blur-xl z-10">
+        {/* Topbar — padded for iOS notch when installed as PWA */}
+        <header
+          className="shrink-0 flex items-center justify-between px-4 md:px-5 border-b border-border/30 bg-background/80 backdrop-blur-xl z-10"
+          style={{ minHeight: '3.5rem', paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2.5 -ml-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -382,7 +386,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-14 md:pb-0 scroll-touch">
           {children}
         </main>
 
@@ -476,6 +480,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Mobile bottom tab bar — hidden on desktop */}
+      <MobileBottomNav onMenuOpen={() => setIsSidebarOpen(true)} />
     </div>
   );
 }
