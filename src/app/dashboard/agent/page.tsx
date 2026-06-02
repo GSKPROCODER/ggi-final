@@ -44,7 +44,7 @@ export default function AgentChat() {
       const assistantMsg: AgentMessage = { role: 'assistant', content: res.message };
       setMessages(prev => [...prev, assistantMsg]);
     } catch (err) {
-      const errorMsg: AgentMessage = { role: 'assistant', content: "⚠️ Critical Error: The Nexus Agent failed to process the request. Please verify the backend LangGraph connection." };
+      const errorMsg: AgentMessage = { role: 'assistant', content: "Something went wrong processing your request. Please try again." };
       setMessages(prev => [...prev, errorMsg]);
       toast.error(err instanceof Error ? err.message : 'Agent request failed.');
     } finally {
@@ -164,10 +164,9 @@ export default function AgentChat() {
                <Send size={20} className="mr-0.5 ml-0.5" />
              </button>
           </form>
-          <div className="text-center mt-3">
-             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest flex items-center justify-center gap-1.5 opacity-60">
-             </p>
-          </div>
+          <p className="text-center mt-2 text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+            Powered by Gemini 2.5 Flash
+          </p>
         </div>
       </div>
     </div>

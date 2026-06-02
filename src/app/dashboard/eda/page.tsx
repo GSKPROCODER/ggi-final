@@ -194,11 +194,10 @@ const EDA: React.FC = () => {
           icon={Activity}
           color={COLORS.primary}
         />
-        <StatCard 
-          title="Avg Chars" 
-          value={overview.avg_chars || "0"} 
+        <StatCard
+          title="Avg Chars"
+          value={overview.avg_chars || "0"}
           icon={BarChart3}
-          trend="+5.1%"
           color={COLORS.success}
         />
         <StatCard 
@@ -250,7 +249,7 @@ const EDA: React.FC = () => {
 
         <ChartContainer
           title="Risk Profile" 
-          description="Security vulnerability assessment"
+          description="Risk level distribution"
           icon={AlertTriangle}
         >
           <div style={{ width: '100%', height: 220 }}>

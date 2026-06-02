@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Handles POST requests to run conversational database analytics.
- * Feeds chat messages directly into the DeepMind critic LangGraph state machine.
+ * Runs conversational database analytics via Gemini function-calling.
  */
 export async function POST(req: Request) {
   try {
