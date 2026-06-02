@@ -56,7 +56,7 @@
     --secondary: #f1f5f9;
     --secondary-foreground: #334155;
     --muted: #f1f5f9;
-    --muted-foreground: #64748b;
+    --muted-foreground: #475569;
     --accent: #f1f5f9;
     --accent-foreground: #0f172a;
     --destructive: #ef4444;
@@ -65,15 +65,15 @@
     --success-foreground: #ffffff;
     --warning: #f59e0b;
     --warning-foreground: #000000;
-    --border: #e2e8f0;
+    --border: #cbd5e1;
     --input: #e2e8f0;
     --ring: #2563eb;
 
     /* Custom Architectural Variables */
-    --glass-surface: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(0, 0, 0, 0.05);
-    --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.15);
-    --shadow-soft: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+    --glass-surface: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.12);
+    --shadow-soft: 0 2px 12px -2px rgba(0, 0, 0, 0.10);
   }
 
   .dark {

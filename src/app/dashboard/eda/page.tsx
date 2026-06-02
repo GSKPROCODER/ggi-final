@@ -46,29 +46,25 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon: Icon, trend, color }: StatCardProps) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="relative overflow-hidden group bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 rounded-2xl"
-  >
-    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+  <div className="relative overflow-hidden group glass-card border border-border/50 p-6 rounded-2xl">
+    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
       <Icon size={80} color={color} />
     </div>
     <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+      <div className="p-2 rounded-lg bg-secondary/50 border border-border/50">
         <Icon size={20} color={color} />
       </div>
-      <h3 className="text-slate-400 font-medium text-xs uppercase tracking-[0.15em]">{title}</h3>
+      <h3 className="text-muted-foreground font-medium text-xs uppercase tracking-[0.15em]">{title}</h3>
     </div>
     <div className="flex items-baseline gap-2">
-      <span className="text-3xl font-bold text-white tracking-tight">{value}</span>
+      <span className="text-3xl font-bold text-foreground tracking-tight">{value}</span>
       {trend && (
-        <span className={`text-xs font-medium ${trend.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>
+        <span className={`text-xs font-medium ${trend.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>
           {trend}
         </span>
       )}
     </div>
-  </motion.div>
+  </div>
 );
 
 interface ChartContainerProps {
@@ -79,31 +75,27 @@ interface ChartContainerProps {
 }
 
 const ChartContainer = ({ title, description, children, icon: Icon }: ChartContainerProps) => (
-  <motion.div 
-    initial={{ opacity: 0, scale: 0.98 }}
-    animate={{ opacity: 1, scale: 1 }}
-    className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-2xl"
-  >
+  <div className="glass-card border border-border/50 rounded-2xl p-6">
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {Icon && (
-          <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-            <Icon size={18} className="text-indigo-400" />
+          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <Icon size={18} className="text-primary" />
           </div>
         )}
         <div>
-          <h3 className="text-lg font-semibold text-white tracking-tight">{title}</h3>
-          <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">{description}</p>
+          <h3 className="text-base font-semibold text-foreground tracking-tight">{title}</h3>
+          {description && <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{description}</p>}
         </div>
       </div>
-      <button className="p-2 rounded-md hover:bg-white/5 text-slate-400 transition-colors">
+      <button className="p-2 rounded-md hover:bg-secondary/50 text-muted-foreground transition-colors">
         <Download size={14} />
       </button>
     </div>
     <div className="h-[280px] w-full">
       {children}
     </div>
-  </motion.div>
+  </div>
 );
 
 const EDA: React.FC = () => {
@@ -162,7 +154,7 @@ const EDA: React.FC = () => {
         >
           <RefreshCw size={40} className="text-indigo-500" />
         </motion.div>
-        <p className="text-slate-400 font-medium tracking-tight animate-pulse">Initializing Synthetic Analytics Kernel...</p>
+        <p className="text-muted-foreground font-medium tracking-tight animate-pulse">Loading analytics…</p>
       </div>
     );
   }
@@ -174,15 +166,15 @@ const EDA: React.FC = () => {
   return (
     <div className="w-full space-y-8 pb-12 p-5 md:p-6">
       <div className="flex items-center justify-end gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 focus-within:border-indigo-500/50 transition-all">
-            <Filter size={14} className="text-slate-500" />
-            <select 
+          <div className="flex items-center gap-2 bg-secondary/50 border border-border/50 rounded-xl px-4 py-2 focus-within:border-primary/50 transition-all">
+            <Filter size={14} className="text-muted-foreground" />
+            <select
               value={selectedDataset}
               onChange={(e) => handleDatasetChange(e.target.value)}
-              className="bg-transparent text-white text-xs outline-none cursor-pointer appearance-none pr-4"
+              className="bg-transparent text-foreground text-xs outline-none cursor-pointer appearance-none pr-4"
             >
               {datasets.map(ds => (
-                <option key={ds.id} value={ds.id} className="bg-[#0f172a]">{ds.original_filename}</option>
+                <option key={ds.id} value={ds.id}>{ds.original_filename}</option>
               ))}
             </select>
           </div>
@@ -247,7 +239,7 @@ const EDA: React.FC = () => {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                 itemStyle={{ color: '#fff' }}
               />
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
@@ -264,12 +256,12 @@ const EDA: React.FC = () => {
           <div style={{ width: '100%', height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={distributions.risk}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="name" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
               <Tooltip 
                 cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: 'none' }}
+                contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--border)' }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                 {distributions.risk?.map((entry, index) => (
@@ -295,10 +287,10 @@ const EDA: React.FC = () => {
                   <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="name" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
               <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: 'none' }}
+                contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--border)' }}
               />
               <Area 
                 type="monotone" 
@@ -313,16 +305,16 @@ const EDA: React.FC = () => {
           </div>
         </ChartContainer>
 
-        <div className="bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-          <Sparkles className="text-indigo-400 mb-6 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" size={56} />
-          <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">AI Logic Core Active</h3>
-          <p className="text-slate-400 text-sm max-w-xs mb-8 leading-relaxed">
-            The Analyst-Critic loop has discovered systemic correlations in your latest upload.
+        <div className="glass-card border border-border/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+          <Sparkles className="text-primary mb-6" size={48} />
+          <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">Insights Ready</h3>
+          <p className="text-muted-foreground text-sm max-w-xs mb-6 leading-relaxed">
+            Your dataset has been analyzed. Ask the Nexus Agent about the findings.
           </p>
-          <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all group shadow-xl active:scale-95">
-            Discuss Findings
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          <a href="/dashboard/agent" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-xl font-medium transition-all group">
+            Ask Agent
+            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          </a>
         </div>
       </div>
     </div>
