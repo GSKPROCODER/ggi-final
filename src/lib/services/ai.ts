@@ -126,7 +126,7 @@ async function generateAIContent(prompt: string, jsonMode = false, temperature =
  * Strips markdown code blocks (e.g. ```json ... ```) from a text response
  * to ensure that standard JSON parsing does not encounter syntax errors.
  */
-function parseJsonResponse<T>(text: string): T {
+export function parseJsonResponse<T>(text: string): T {
   const cleanText = text.trim();
   const jsonMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   const jsonString = jsonMatch ? jsonMatch[1].trim() : cleanText;

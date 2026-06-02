@@ -175,7 +175,7 @@ The export feature is broken — CSV downloads contain corrupted data.,1,High
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold mb-1">Upload Your Dataset</h2>
-          <p className="text-muted-foreground">Upload a CSV or Excel (.xlsx) file containing your text data. Up to 50,000 rows supported.</p>
+          <p className="text-muted-foreground">Upload a CSV or Excel (.xlsx) file containing your text data. The first 500 rows are analyzed.</p>
         </div>
         <button
           onClick={useSampleDataset}
@@ -226,7 +226,7 @@ The export feature is broken — CSV downloads contain corrupted data.,1,High
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="px-3 py-1 bg-secondary rounded-full">CSV</span>
-                <span>Up to 50,000 rows</span>
+                <span>First 500 rows analyzed</span>
                 <span>Auto-encoding detection</span>
               </div>
             </>
@@ -269,6 +269,13 @@ The export feature is broken — CSV downloads contain corrupted data.,1,High
             <Sparkles size={14} /> Select Recommended
           </button>
         </div>
+
+        {(dataset?.row_count ?? 0) > 500 && (
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-sm text-amber-500">
+            <AlertCircle size={16} className="shrink-0" />
+            This dataset has {dataset?.row_count?.toLocaleString()} rows — only the first 500 will be analyzed in this version.
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-secondary/30 p-3 rounded-xl border border-border/40">
           <div className="relative w-full sm:w-72">

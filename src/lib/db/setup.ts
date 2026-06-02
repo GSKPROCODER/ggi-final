@@ -62,7 +62,8 @@ export const SETUP_SQL = `
 export async function ensureSchema(url: string): Promise<void> {
   try {
     const { Pool } = await import('pg');
-    const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+    const { pgSslConfig } = await import('./index');
+    const pool = new Pool({ connectionString: url, ssl: pgSslConfig(url) });
     await pool.query(SETUP_SQL);
     await pool.end();
     console.log('[db:setup] Schema ready.');

@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
-import { analyzeText } from '@/lib/services/gemini';
+import { analyzeText } from '@/lib/services/ai';
 import { requireAuth } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';

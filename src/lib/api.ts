@@ -1,16 +1,10 @@
 /**
  * Typed API client for Nexus AI.
- * All requests are automatically authenticated via JWT Bearer tokens.
- * On 401, automatically attempts token refresh before retrying.
+ * Authentication is handled by Clerk via session cookies — no tokens are
+ * managed here. On 401 the client redirects to the Clerk sign-in page.
  */
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-
-export interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-}
 
 export interface UserResponse {
   id: string;
@@ -228,18 +222,6 @@ async function request<T>(
 // ── API Namespaces ─────────────────────────────────────────────────────────────
 
 export const authApi = {
-  register: (full_name: string, email: string, password: string) =>
-    request<TokenResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ full_name, email, password }),
-    }),
-
-  login: (email: string, password: string) =>
-    request<TokenResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
-
   getMe: () => request<UserResponse>('/auth/me'),
 
   updateProfile: (data: { full_name?: string; email?: string }) =>

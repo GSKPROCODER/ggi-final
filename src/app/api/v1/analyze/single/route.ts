@@ -2,7 +2,7 @@
 import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { records } from '@/lib/db/schema';
-import { analyzeText } from '@/lib/services/gemini';
+import { analyzeText } from '@/lib/services/ai';
 import { requireAuth } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';

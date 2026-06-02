@@ -2,7 +2,7 @@
 import { handleApiError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { datasets, records } from '@/lib/db/schema';
-import { analyzeText, generateBatchInsights } from '@/lib/services/gemini';
+import { analyzeText, generateBatchInsights } from '@/lib/services/ai';
 import { requireAuth } from '@/lib/api/auth';
 import { parseCsvLine } from '@/lib/csv';
 import { eq, and } from 'drizzle-orm';
@@ -11,6 +11,11 @@ import path from 'path';
 import os from 'os';
 
 export const dynamic = 'force-dynamic';
+
+// Cap on rows analyzed per dataset. Kept modest because each row is an LLM call
+// and the whole batch must finish inside the function's maxDuration. Surfaced in
+// the upload UI so truncation is an explicit, communicated limit.
+export const MAX_ANALYZE_ROWS = 500;
 
 /**
  * Handles POST requests to kick off non-blocking Gemini batch processing.
@@ -73,7 +78,7 @@ export async function POST(
           throw new Error(`None of the mapped columns were found in CSV headers: ${columnNames.join(', ')}`);
         }
 
-        const maxRows = Math.min(lines.length - 1, 500);
+        const maxRows = Math.min(lines.length - 1, MAX_ANALYZE_ROWS);
         const texts: string[] = [];
 
         for (let i = 1; i <= maxRows; i++) {
