@@ -92,6 +92,20 @@ I received the package but it was slightly damaged on the side. The product insi
 I love the new dark mode design! It looks incredibly premium and is so easy on the eyes.,5,Low
 The payment page keeps throwing a 500 error when I try to complete the checkout. Please fix it!,1,High
 Great value for money. Will definitely buy again.,4,Low
+Absolutely terrible experience. My order was cancelled without any notification.,1,High
+The new dashboard feature is intuitive and saves me hours each week.,5,Low
+Shipping took 3 weeks instead of the promised 5 days. Very disappointed.,2,Medium
+The AI recommendations are surprisingly accurate and relevant to my use case.,5,Low
+I have been trying to reach customer support for two days with no response.,1,High
+Product quality has noticeably improved compared to last year. Good job!,4,Low
+The mobile app crashes every time I try to upload a file larger than 10MB.,2,High
+Onboarding process was smooth and the tutorials were very helpful.,4,Low
+My subscription was charged twice this month. Please issue a refund immediately.,1,High
+Really impressed with the response time and the quality of the solution provided.,5,Low
+The interface feels outdated compared to competitors. Needs a redesign.,2,Medium
+Works exactly as advertised. No complaints at all.,4,Low
+I was sceptical at first but this product has genuinely improved my workflow.,5,Low
+The export feature is broken — CSV downloads contain corrupted data.,1,High
 `;
     const blob = new Blob([sampleCsv], { type: 'text/csv' });
     const sampleFile = new File([blob], 'nexus_ai_demo_feedback.csv', { type: 'text/csv' });
