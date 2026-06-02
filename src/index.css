@@ -45,7 +45,8 @@
     --sal: env(safe-area-inset-left, 0px);
 
     /* Premium Light Mode (Crisp, Apple/Stripe aesthetic) */
-    --background: #f8fafc;
+    /* Slightly cool-gray canvas so white cards & the glass sidebar separate. */
+    --background: #eef2f7;
     --foreground: #0f172a;
     --card: #ffffff;
     --card-foreground: #0f172a;
@@ -53,27 +54,28 @@
     --popover-foreground: #0f172a;
     --primary: #2563eb;
     --primary-foreground: #ffffff;
-    --secondary: #f1f5f9;
-    --secondary-foreground: #334155;
-    --muted: #f1f5f9;
-    --muted-foreground: #475569;
-    --accent: #f1f5f9;
+    --secondary: #e9eef5;
+    --secondary-foreground: #1e293b;
+    --muted: #e9eef5;
+    /* Darker secondary text — readable even at reduced opacity (slate-700). */
+    --muted-foreground: #334155;
+    --accent: #e9eef5;
     --accent-foreground: #0f172a;
-    --destructive: #ef4444;
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    --success: #10b981;
+    --success: #059669;
     --success-foreground: #ffffff;
-    --warning: #f59e0b;
-    --warning-foreground: #000000;
-    --border: #cbd5e1;
-    --input: #e2e8f0;
+    --warning: #d97706;
+    --warning-foreground: #ffffff;
+    --border: #c2ccda;
+    --input: #d8e0ea;
     --ring: #2563eb;
 
-    /* Custom Architectural Variables */
-    --glass-surface: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(0, 0, 0, 0.12);
+    /* Custom Architectural Variables — stronger edges/lift for separation */
+    --glass-surface: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(15, 23, 42, 0.14);
     --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.12);
-    --shadow-soft: 0 2px 12px -2px rgba(0, 0, 0, 0.10);
+    --shadow-soft: 0 4px 16px -3px rgba(15, 23, 42, 0.12);
   }
 
   .dark {

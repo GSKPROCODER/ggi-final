@@ -74,7 +74,7 @@ export default function AgentChat() {
             </div>
             <h3 className="text-xl md:text-2xl font-semibold mb-2">How can I help?</h3>
             <p className="text-muted-foreground text-sm max-w-sm mb-6">
-              I have live SQL access to your dataset. Ask me anything about your records.
+              I can analyze your processed records — ask about sentiment, risk, emotions, or trends.
             </p>
             <div className="flex flex-wrap gap-2 justify-center pointer-events-auto">
               {suggestions.map((s) => (
