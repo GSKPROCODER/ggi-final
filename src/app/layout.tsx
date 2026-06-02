@@ -66,6 +66,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased transition-colors duration-300" suppressHydrationWarning>
         <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/dashboard"
+          signUpFallbackRedirectUrl="/dashboard"
+          afterSignOutUrl="/"
           appearance={{
             variables: {
               colorPrimary: '#38bdf8',
