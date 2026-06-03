@@ -297,30 +297,46 @@ export default function Analyze() {
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isAnalyzing && (
-          <div
+          <motion.div
+            key="analyzing-loader"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             className="glass-card rounded-2xl border border-border/50 p-12 text-center"
             role="status"
             aria-live="polite"
           >
             <Loader2 size={36} className="text-primary animate-spin mx-auto mb-4" aria-hidden />
             <p className="text-muted-foreground">Gemini is analyzing your text...</p>
-          </div>
+          </motion.div>
         )}
 
         {!isAnalyzing && result && (
-          <div className="space-y-4">
+          <motion.div 
+            key="single-result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
             <div className="flex items-center gap-2">
               <h2 className="font-semibold">Analysis Result</h2>
               <span className="text-xs text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">Single analysis</span>
             </div>
             <ResultCard result={result} />
-          </div>
+          </motion.div>
         )}
 
         {!isAnalyzing && multiResult && (
-          <div className="space-y-4">
+          <motion.div 
+            key="multi-result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
             {multiResult.aggregate && (
               <div
                 className="glass-card rounded-2xl border border-primary/20 bg-primary/5 p-6"
@@ -348,7 +364,7 @@ export default function Analyze() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
