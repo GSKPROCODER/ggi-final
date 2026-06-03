@@ -11,6 +11,8 @@ import { reportsApi } from '@/lib/api';
 import type { ReportListItem, ReportResponse } from '@/lib/api';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { pdf } from '@react-pdf/renderer';
+import { ReportPDF } from '@/components/reports/ReportPDF';
 
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
@@ -99,35 +101,17 @@ export default function Reports() {
     if (!selectedReport) return;
     
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const { jsPDF } = await import('jspdf');
+      const toastId = toast.loading('Generating high-quality PDF...');
       
-      const element = document.getElementById('report-content');
-      if (!element) return;
+      const blob = await pdf(<ReportPDF report={selectedReport} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedReport.title.replace(/\s+/g, '_')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
       
-      // Temporarily hide scrollbars for cleaner capture
-      const originalOverflow = element.style.overflow;
-      element.style.overflow = 'visible';
-      
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff'
-      });
-      
-      element.style.overflow = originalOverflow;
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-        unit: 'px',
-        format: [canvas.width / 2, canvas.height / 2]
-      });
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`${selectedReport.title.replace(/\s+/g, '_')}.pdf`);
-      toast.success('Report downloaded as PDF');
+      toast.success('Report downloaded as PDF', { id: toastId });
     } catch (err) {
       console.error(err);
       toast.error('Failed to generate PDF');
