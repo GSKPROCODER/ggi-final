@@ -95,34 +95,85 @@ export default function Reports() {
     }
   };
 
-  const exportReportAsText = () => {
+  const exportReportAsPDF = async () => {
     if (!selectedReport) return;
-    const content = `
-NEXUS AI INTELLIGENCE REPORT
-${selectedReport.title}
-Generated: ${format(new Date(selectedReport.created_at), 'PPP')}
+    
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      const maxWidth = pageWidth - margin * 2;
+      let y = margin;
 
-OVERVIEW
-${selectedReport.overview}
+      // Helper to add text and manage page breaks
+      const addText = (text: string, fontSize = 12, isBold = false) => {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+        
+        const lines = doc.splitTextToSize(text, maxWidth);
+        
+        lines.forEach((line: string) => {
+          if (y > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += fontSize * 0.4;
+        });
+        y += fontSize * 0.5;
+      };
 
-KEY FINDINGS
-${selectedReport.key_findings.map((f, i) => `${i + 1}. ${f}`).join('\n')}
+      // Header
+      addText('NEXUS AI INTELLIGENCE REPORT', 18, true);
+      y += 5;
+      addText(selectedReport.title, 14, true);
+      addText(`Generated: ${format(new Date(selectedReport.created_at), 'PPP')}`, 10);
+      y += 10;
 
-TREND ANALYSIS
-${selectedReport.trend_analysis}
+      if (selectedReport.overview) {
+        addText('OVERVIEW', 12, true);
+        addText(selectedReport.overview, 11);
+        y += 5;
+      }
 
-RISK ASSESSMENT
-${selectedReport.risk_assessment}
+      if (selectedReport.metrics.length > 0) {
+        addText('KEY METRICS', 12, true);
+        selectedReport.metrics.forEach(m => addText(`${m.label}: ${m.value}`, 11));
+        y += 5;
+      }
 
-RECOMMENDATIONS
-${selectedReport.recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+      if (selectedReport.key_findings.length > 0) {
+        addText('KEY FINDINGS', 12, true);
+        selectedReport.key_findings.forEach((f, i) => addText(`${i + 1}. ${f}`, 11));
+        y += 5;
+      }
 
-KEY METRICS
-${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
-    `.trim();
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `${selectedReport.title.replace(/\s+/g, '_')}.txt`; a.click();
+      if (selectedReport.trend_analysis) {
+        addText('TREND ANALYSIS', 12, true);
+        addText(selectedReport.trend_analysis, 11);
+        y += 5;
+      }
+
+      if (selectedReport.risk_assessment) {
+        addText('RISK ASSESSMENT', 12, true);
+        addText(selectedReport.risk_assessment, 11);
+        y += 5;
+      }
+
+      if (selectedReport.recommendations.length > 0) {
+        addText('RECOMMENDATIONS', 12, true);
+        selectedReport.recommendations.forEach((r, i) => addText(`${i + 1}. ${r}`, 11));
+        y += 5;
+      }
+
+      doc.save(`${selectedReport.title.replace(/\s+/g, '_')}.pdf`);
+      toast.success('Report downloaded as PDF');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const filtered = useMemo(() => {
@@ -264,7 +315,7 @@ ${selectedReport.metrics.map(m => `${m.label}: ${m.value}`).join('\n')}
                   <p className="text-xs text-muted-foreground">{format(new Date(selectedReport.created_at), 'PPp')}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={exportReportAsText}
+                  <button onClick={exportReportAsPDF}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors">
                     <Download size={13} /> Export
                   </button>
