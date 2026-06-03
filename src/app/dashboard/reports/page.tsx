@@ -99,76 +99,34 @@ export default function Reports() {
     if (!selectedReport) return;
     
     try {
+      const { default: html2canvas } = await import('html2canvas');
       const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
       
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 20;
-      const maxWidth = pageWidth - margin * 2;
-      let y = margin;
-
-      // Helper to add text and manage page breaks
-      const addText = (text: string, fontSize = 12, isBold = false) => {
-        doc.setFontSize(fontSize);
-        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-        
-        const lines = doc.splitTextToSize(text, maxWidth);
-        
-        lines.forEach((line: string) => {
-          if (y > doc.internal.pageSize.getHeight() - margin) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += fontSize * 0.4;
-        });
-        y += fontSize * 0.5;
-      };
-
-      // Header
-      addText('NEXUS AI INTELLIGENCE REPORT', 18, true);
-      y += 5;
-      addText(selectedReport.title, 14, true);
-      addText(`Generated: ${format(new Date(selectedReport.created_at), 'PPP')}`, 10);
-      y += 10;
-
-      if (selectedReport.overview) {
-        addText('OVERVIEW', 12, true);
-        addText(selectedReport.overview, 11);
-        y += 5;
-      }
-
-      if (selectedReport.metrics.length > 0) {
-        addText('KEY METRICS', 12, true);
-        selectedReport.metrics.forEach(m => addText(`${m.label}: ${m.value}`, 11));
-        y += 5;
-      }
-
-      if (selectedReport.key_findings.length > 0) {
-        addText('KEY FINDINGS', 12, true);
-        selectedReport.key_findings.forEach((f, i) => addText(`${i + 1}. ${f}`, 11));
-        y += 5;
-      }
-
-      if (selectedReport.trend_analysis) {
-        addText('TREND ANALYSIS', 12, true);
-        addText(selectedReport.trend_analysis, 11);
-        y += 5;
-      }
-
-      if (selectedReport.risk_assessment) {
-        addText('RISK ASSESSMENT', 12, true);
-        addText(selectedReport.risk_assessment, 11);
-        y += 5;
-      }
-
-      if (selectedReport.recommendations.length > 0) {
-        addText('RECOMMENDATIONS', 12, true);
-        selectedReport.recommendations.forEach((r, i) => addText(`${i + 1}. ${r}`, 11));
-        y += 5;
-      }
-
-      doc.save(`${selectedReport.title.replace(/\s+/g, '_')}.pdf`);
+      const element = document.getElementById('report-content');
+      if (!element) return;
+      
+      // Temporarily hide scrollbars for cleaner capture
+      const originalOverflow = element.style.overflow;
+      element.style.overflow = 'visible';
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff'
+      });
+      
+      element.style.overflow = originalOverflow;
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`${selectedReport.title.replace(/\s+/g, '_')}.pdf`);
       toast.success('Report downloaded as PDF');
     } catch (err) {
       console.error(err);
@@ -306,27 +264,27 @@ export default function Reports() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setIsPreviewOpen(false)} />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-full max-w-2xl bg-background border-l border-border/50 z-50 overflow-y-auto">
-              <div className="sticky top-0 bg-background/95 backdrop-blur border-b border-border/50 p-5 flex items-center justify-between">
+              className="fixed inset-4 md:inset-8 lg:inset-12 bg-background rounded-3xl border border-border/50 shadow-2xl z-50 flex flex-col overflow-hidden max-w-6xl mx-auto">
+              <div className="bg-background/95 backdrop-blur border-b border-border/50 p-6 flex items-center justify-between shrink-0">
                 <div>
-                  <h2 className="font-bold text-lg">{selectedReport.title}</h2>
-                  <p className="text-xs text-muted-foreground">{format(new Date(selectedReport.created_at), 'PPp')}</p>
+                  <h2 className="font-bold text-xl">{selectedReport.title}</h2>
+                  <p className="text-sm text-muted-foreground">{format(new Date(selectedReport.created_at), 'PPp')}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button onClick={exportReportAsPDF}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors">
-                    <Download size={13} /> Export
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+                    <Download size={16} /> Export PDF
                   </button>
                   <button onClick={() => setIsPreviewOpen(false)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors">
-                    <X size={18} />
+                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors bg-secondary/20">
+                    <X size={20} />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6 space-y-8">
+              <div id="report-content" className="p-8 md:p-12 space-y-10 overflow-y-auto flex-1 bg-background relative">
                 {/* Overview */}
                 {selectedReport.overview && (
                   <section>
