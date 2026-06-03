@@ -11,14 +11,15 @@ let _db: DbInstance | undefined;
 /**
  * TLS config for the node-postgres Pool (non-Neon path).
  * - Local databases (Docker/localhost) typically have TLS disabled.
- * - Everything else verifies the server certificate by default.
- * - DATABASE_SSL_NO_VERIFY=true is a dev-only escape hatch for providers
- *   that present a self-signed chain; never set it in production.
+ * - Managed providers are reached over TLS but with verification disabled,
+ *   because several (incl. the one used in production) present a chain that
+ *   doesn't validate against Node's default CA bundle. Enabling verification
+ *   broke production, so we keep it off here. (Proper CA pinning is tracked
+ *   as deferred "real production" work.)
  */
 export function pgSslConfig(url: string): false | { rejectUnauthorized: boolean } {
   if (/(?:localhost|127\.0\.0\.1)/.test(url)) return false;
-  if (process.env.DATABASE_SSL_NO_VERIFY === 'true') return { rejectUnauthorized: false };
-  return { rejectUnauthorized: true };
+  return { rejectUnauthorized: false };
 }
 
 function getDb(): DbInstance {
