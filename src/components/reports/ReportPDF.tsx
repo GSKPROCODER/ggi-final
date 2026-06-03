@@ -4,87 +4,87 @@ import { format } from 'date-fns';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 30,
     backgroundColor: '#ffffff',
     fontFamily: 'Helvetica',
   },
   header: {
-    marginBottom: 30,
+    marginBottom: 20,
   },
   logoText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#52525b',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 6,
     color: '#09090b',
   },
   date: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#71717a',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#3f3f46',
     textTransform: 'uppercase',
-    marginBottom: 10,
+    marginBottom: 6,
     borderBottom: '1pt solid #e4e4e7',
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   text: {
-    fontSize: 11,
-    lineHeight: 1.5,
+    fontSize: 9,
+    lineHeight: 1.4,
     color: '#27272a',
   },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
   metricCard: {
     width: '48%',
-    padding: 12,
+    padding: 8,
     border: '1pt solid #e4e4e7',
     borderRadius: 6,
     backgroundColor: '#fafafa',
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#71717a',
   },
   listItem: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   bullet: {
-    width: 20,
-    fontSize: 11,
+    width: 15,
+    fontSize: 9,
     color: '#18181b',
     fontWeight: 'bold',
   },
   listItemText: {
     flex: 1,
-    fontSize: 11,
-    lineHeight: 1.5,
+    fontSize: 9,
+    lineHeight: 1.4,
     color: '#27272a',
   },
   alertBox: {
-    padding: 12,
+    padding: 8,
     border: '1pt solid #fcd34d',
     backgroundColor: '#fffbeb',
     borderRadius: 6,
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
 
 export const ReportPDF = ({ report }: { report: ReportResponse }) => (
   <Document>
-    <Page size="A4" style={styles.page}>
+    <Page size="A4" style={styles.page} wrap={false}>
       <View style={styles.header}>
         <Text style={styles.logoText}>NEXUS AI INTELLIGENCE REPORT</Text>
         <Text style={styles.title}>{report.title}</Text>
