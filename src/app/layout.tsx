@@ -71,18 +71,13 @@ export default function RootLayout({
           signInFallbackRedirectUrl="/dashboard"
           signUpFallbackRedirectUrl="/dashboard"
           afterSignOutUrl="/"
+          // Only set a theme-neutral primary + radius. Clerk auto-detects the
+          // color scheme and themes its card/inputs/text for light AND dark —
+          // hardcoding colors here breaks the mode we didn't pick for.
           appearance={{
             variables: {
               colorPrimary: '#2563eb',
-              colorText: '#0f172a',
-              colorTextSecondary: '#475569',
-              colorBackground: '#ffffff',
-              colorInputText: '#0f172a',
-              colorInputBackground: '#ffffff',
               borderRadius: '0.75rem',
-            },
-            elements: {
-              card: 'shadow-xl border border-slate-200',
             },
           }}
         >
